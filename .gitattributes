@@ -1,0 +1,2 @@
+*.zip filter=lfs diff=lfs merge=lfs -text
+demon_mode/sdk/java/jdk-21.0.4+7/lib/modules filter=lfs diff=lfs merge=lfs -text
