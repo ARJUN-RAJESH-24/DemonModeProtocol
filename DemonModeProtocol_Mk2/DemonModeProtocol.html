@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demon Mode Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        .demon-red {
+            background-color: #e94560;
+        }
+        .demon-red-text {
+            color: #e94560;
+        }
+        .streak-green {
+            background-color: #2ecc71;
+        }
+        .streak-red {
+            background-color: #e94560; /* Used if a streak is broken */
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            background-color: #2c3e50;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+        .water-drop {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            background-color: #3498db;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform: rotate(180deg);
+        }
+        .water-drop.empty {
+            opacity: 0.3;
+            background-color: #2c3e50; /* Grey out empty drops */
+        }
+        .water-drop::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255,255,255,0.5);
+            border-radius: 50%;
+        }
+        .flip-card {
+            perspective: 1000px;
+            height: 120px; /* Fixed height for consistent cards */
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        .editable-content:hover {
+            cursor: text;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="gradient-bg text-white min-h-screen font-sans">
+    <nav class="demon-red p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-fire text-2xl"></i>
+                <h1 class="text-xl font-bold">DEMON MODE PROTOCOL</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="settingsBtn" class="p-2 rounded-full hover:bg-red-700">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button id="profileBtn" class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6 mb-20"> <section id="dashboard" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-tachometer-alt mr-2"></i> Home Dashboard
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-semibold">Demon Score</h3>
+                        <span id="demonScoreValue" class="demon-red-text font-bold"></span>
+                    </div>
+                    <div class="progress-bar mb-2">
+                        <div id="demonScoreFill" class="progress-fill demon-red"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Today</span>
+                        <span>Weekly: <span id="demonScoreWeeklyChange"></span></span>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <h3 class="font-semibold mb-2">Calories</h3>
+                    <div class="flex justify-between mb-1">
+                        <span class="calories-in"></span>
+                        <span class="calories-out"></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="caloriesFill" class="progress-fill bg-blue-500"></div>
+                    </div>
+                    <div class="text-right text-xs text-gray-400 mt-1">Deficit: <span class="calories-deficit"></span></div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <h3 class="font-semibold mb-2">Workout Summary</h3>
+                    <div class="flex justify-between text-sm">
+                        <div id="amWorkoutSummary">
+                            </div>
+                        <div id="pmWorkoutSummary">
+                            </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <div class="flex justify-between mb-2">
+                        <div>
+                            <h3 class="font-semibold">Steps</h3>
+                            <div class="text-xl"><span id="currentSteps"></span> <span class="text-sm text-gray-400">/<span id="targetSteps"></span>k</span></div>
+                        </div>
+                        <div class="text-right">
+                            <h3 class="font-semibold">Hydration</h3>
+                            <div class="text-xl"><span id="currentHydration"></span>L <span class="text-sm text-gray-400">/<span id="targetHydration"></span>L</span></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="progress-bar flex-1 mr-2">
+                            <div id="stepsProgressFill" class="progress-fill bg-green-500"></div>
+                        </div>
+                        <div class="progress-bar flex-1">
+                            <div id="hydrationProgressFill" class="progress-fill bg-blue-400"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <h3 class="font-semibold mb-2">Body Mass Index (BMI)</h3>
+                    <p class="text-2xl"><span id="bmiValue">N/A</span></p>
+                    <p class="text-sm text-gray-400" id="bmiCategory"></p>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <h3 class="font-semibold mb-2">Basal Metabolic Rate (BMR)</h3>
+                    <p class="text-2xl"><span id="bmrValue">N/A</span> kcal/day</p>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                    <h3 class="font-semibold mb-2">Total Daily Energy Expenditure (TDEE)</h3>
+                    <p class="text-2xl"><span id="tdeeValue">N/A</span> kcal/day</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg mb-6">
+                <h3 class="font-semibold mb-4">Mood & Focus Meter</h3>
+                <div class="flex justify-between px-4">
+                    <span class="text-xs">😔 Weak</span>
+                    <span class="text-xs">😐 Neutral</span>
+                    <span class="text-xs">😤 Focused</span>
+                    <span class="text-xs">😈 Demon Mode</span>
+                </div>
+                <input type="range" min="1" max="100" value="75" id="moodFocusSlider" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-2">
+                <div class="flex justify-between mt-2">
+                    <input type="text" id="moodNoteInput" class="w-full bg-gray-700 rounded p-2 text-xs placeholder-gray-400" placeholder="Add a note for your mood/focus..." value="">
+                </div>
+            </div>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <h3 class="font-semibold mb-2" id="currentStreakDisplay">Current Streak: 0 days</h3>
+                <div id="streakBarContainer" class="flex space-x-1">
+                    </div>
+            </div>
+        </section>
+        
+        <section id="protocolLogger" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="far fa-calendar-alt mr-2"></i> Daily Protocol Logger
+            </h2>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg mb-6">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xl font-semibold flex items-center">
+                            <i class="fas fa-utensils mr-2"></i> Nutrition Log
+                        </h3>
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">OMAD:</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="omadToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="mealLogContainer" class="mb-4 space-y-4">
+                        </div>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium mb-2">Supplements</h4>
+                        <div id="supplementLogContainer" class="flex flex-wrap gap-2">
+                            </div>
+                        <div class="mt-2">
+                            <input type="text" id="newSupplementInput" placeholder="Add new supplement (e.g., Vitamin D)" class="w-full bg-gray-700 rounded-lg p-2 text-sm">
+                            <button id="addSupplementBtn" class="w-full py-2 bg-gray-700 rounded-lg font-medium flex items-center justify-center mt-2">
+                                <i class="fas fa-plus mr-2"></i> Add Supplement
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button id="addMealBtn" class="w-full py-2 demon-red rounded-lg font-medium flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i> Add Meal
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center">
+                        <i class="fas fa-dumbbell mr-2"></i> Workout Log
+                    </h3>
+                    
+                    <div id="workoutLogContainer" class="mb-4 space-y-4">
+                        </div>
+                    
+                    <button id="addWorkoutBtn" class="w-full py-2 demon-red rounded-lg font-medium mt-4 flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i> Add Workout
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center">
+                        <i class="fas fa-tint mr-2"></i> Hydration Tracker
+                    </h3>
+                    
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h4 class="font-medium">Water Intake</h4>
+                                <div class="text-2xl"><span id="waterIntakeDisplay"></span><span class="text-lg">/<span id="waterTargetDisplay"></span>L</span></div>
+                            </div>
+                            <div id="waterDropContainer" class="flex space-x-1">
+                                </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">Caffeine Intake</h4>
+                                <div class="text-2xl"><span id="coffeeIntakeDisplay"></span><span class="text-lg">/<span id="coffeeTargetDisplay"></span> cups</span></div>
+                            </div>
+                            <div id="coffeeIconContainer" class="flex space-x-1">
+                                </div>
+                        </div>
+                        
+                        <div class="flex space-x-2 mt-3">
+                            <button id="addWater250ml" class="flex-1 py-2 bg-gray-800 rounded-lg">
+                                <i class="fas fa-plus mr-1"></i> 250ml
+                            </button>
+                            <button id="addWater500ml" class="flex-1 py-2 bg-gray-800 rounded-lg">
+                                <i class="fas fa-plus mr-1"></i> 500ml
+                            </button>
+                            <button id="addCoffee" class="flex-1 py-2 bg-gray-800 rounded-lg">
+                                <i class="fas fa-coffee mr-1"></i> +1
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-3 flex items-center">
+                        <i class="fas fa-shield-alt mr-2"></i> Discipline & Compliance
+                    </h3>
+                    
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span>✅ No sugar</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="noSugarCheck" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>✅ No oil</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="noOilCheck" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>✅ No cheat meals</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="noCheatMealsCheck" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>✅ No ejaculation</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="noEjaculationCheck" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>✅ Protocol followed</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="protocolFollowedCheck" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h4 class="font-medium mb-2">Remarks</h4>
+                            <textarea id="remarksTextarea" class="w-full bg-gray-800 rounded-lg p-3 text-sm" rows="2" placeholder="Add remarks (e.g., 'Pain in delt', 'Slight fatigue', 'Felt godlike')"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="mindDiscipline" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-brain mr-2"></i> Mind & Discipline
+            </h2>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Daily Reflection Prompt</h3>
+                    <p id="reflectionPrompt" class="text-gray-300 italic">"What small victory can you build upon tomorrow?"</p>
+                    <textarea id="reflectionTextarea" class="w-full bg-gray-700 rounded-lg p-3 text-sm mt-2" rows="3" placeholder="Write your reflection here..."></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Discipline Score</h3>
+                    <div class="flex items-center">
+                        <div id="disciplineScoreCircle" class="w-16 h-16 rounded-full demon-red flex items-center justify-center text-2xl font-bold mr-4">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Behavioral:</span>
+                                <span id="behavioralScore"></span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Self-rated:</span>
+                                <span id="selfRatedScore"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Journal - "What I Conquered Today"</h3>
+                    <textarea id="journalConquestsTextarea" class="w-full bg-gray-700 rounded-lg p-3 text-sm" rows="3" placeholder="Record your daily conquests..."></textarea>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-2">Daily Demon Affirmation</h3>
+                    <div class="bg-gray-700 p-3 rounded-lg mb-2">
+                        <p id="currentAffirmationDisplay" class="font-medium demon-red-text"></p>
+                    </div>
+                    <button id="generateAffirmationBtn" class="w-full py-2 demon-red rounded-lg font-medium">
+                        <i class="fas fa-random mr-2"></i> Generate New Affirmation
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <section id="progressAnalytics" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-chart-line mr-2"></i> Progress & Analytics
+            </h2>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">Body Metrics</h3>
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 bg-gray-700 rounded text-sm">Week</button>
+                        <button class="px-3 py-1 bg-gray-700 rounded text-sm">Month</button>
+                        <button class="px-3 py-1 demon-red rounded text-sm">All</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-700 p-3 rounded-lg">
+                        <div class="text-gray-400 text-sm">Weight</div>
+                        <div class="text-xl"><span id="currentWeightDisplay"></span><span class="text-lg">kg</span></div>
+                        <div id="weightChangeDisplay" class="text-xs demon-red-text"></div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-lg">
+                        <div class="text-gray-400 text-sm">Body Fat %</div>
+                        <div class="text-xl"><span id="currentBodyFatDisplay"></span><span class="text-lg">%</span></div>
+                        <div id="bodyFatChangeDisplay" class="text-xs text-green-500"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-container bg-gray-700 rounded-lg p-2 mb-4">
+                    <canvas id="weightChart"></canvas>
+                </div>
+                
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold">Muscle Group Frequency (Last 30d)</h3>
+                    <button class="text-xs text-gray-400">View Details</button>
+                </div>
+                
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Chest</span>
+                            <span id="chestSessions"></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="chestProgressFill" class="progress-fill bg-red-400"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Back</span>
+                            <span id="backSessions"></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="backProgressFill" class="progress-fill bg-blue-400"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Legs</span>
+                            <span id="legsSessions"></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="legsProgressFill" class="progress-fill bg-purple-400"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <h3 class="font-semibold mb-3">Running Progress</h3>
+                
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <div class="bg-gray-700 p-2 rounded-lg text-center">
+                        <div class="text-xs text-gray-400">VO2 Max</div>
+                        <div id="vo2MaxDisplay" class="text-lg"></div>
+                    </div>
+                    <div class="bg-gray-700 p-2 rounded-lg text-center">
+                        <div class="text-xs text-gray-400">5k PB</div>
+                        <div id="fiveKPBDisplay" class="text-lg"></div>
+                    </div>
+                    <div class="bg-gray-700 p-2 rounded-lg text-center">
+                        <div class="text-xs text-gray-400">Monthly km</div>
+                        <div id="monthlyKmDisplay" class="text-lg"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-container bg-gray-700 rounded-lg p-2">
+                    <canvas id="runningChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <section id="achievements" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-trophy mr-2"></i> Achievements
+            </h2>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">Demon Evolution</h3>
+                    <div class="flex items-center">
+                        <span id="demonEvolutionRank" class="text-sm mr-2"></span>
+                        <div class="w-24 bg-gray-700 h-2 rounded-full">
+                            <div id="demonEvolutionProgress" class="bg-yellow-500 h-2 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="achievementsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    </div>
+                
+                <button class="w-full py-2 demon-red rounded-lg font-medium">
+                    <i class="fas fa-medal mr-2"></i> View All Achievements
+                </button>
+            </div>
+        </section>
+        
+        <section id="knowledge" class="mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-book mr-2"></i> Knowledge & Fuel
+            </h2>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-700 p-3 rounded-lg">
+                        <h3 class="font-semibold mb-2 flex items-center">
+                            <i class="fas fa-dumbbell mr-2"></i> Workout Guides
+                        </h3>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-xs mr-2 demon-red-text"></i> Gym Training Splits
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-xs mr-2 demon-red-text"></i> Resistance Band Routines
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-xs mr-2 demon-red-text"></i> Calisthenics Progressions
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-gray-700 p-3 rounded-lg">
+                        <h3 class="font-semibold mb-2 flex items-center">
+                            <i class="fas fa-utensils mr-2"></i> Nutrition Principles
+                        </h3>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-xs mr-2 demon-red-text"></i> Macro Calculations
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-xs mr-2 demon-red-text"></i> Meal Timing Strategies
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-xs mr-2 demon-red-text"></i> Supplement Guide
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-700 p-3 rounded-lg mb-4">
+                    <h3 class="font-semibold mb-2 flex items-center">
+                        <i class="fas fa-brain mr-2"></i> Mental Warfare Strategies
+                    </h3>
+                    <div class="text-sm">
+                        <div class="flex items-start mb-2">
+                            <i class="fas fa-chevron-right text-xs mr-2 demon-red-text mt-1"></i>
+                            <div>
+                                <span class="font-medium">Dopamine Control:</span> Techniques to reset your reward system and build discipline.
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-chevron-right text-xs mr-2 demon-red-text mt-1"></i>
+                            <div>
+                                <span class="font-medium">Monk Mode:</span> Deep focus protocols for maximum productivity.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-700 p-3 rounded-lg">
+                    <h3 class="font-semibold mb-2">Demon Mode Code of Conduct</h3>
+                    <textarea id="codeOfConductTextarea" class="w-full bg-gray-800 rounded-lg p-3 text-sm" rows="4"></textarea>
+                </div>
+            </div>
+        </section>
+        
+        <section id="secretMode">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-lock mr-2"></i> Secret Mode
+            </h2>
+            
+            <div class="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 demon-red rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-skull text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Emergency Demon Activation</h3>
+                    <p class="text-gray-300 mb-4">For when weakness tries to creep in</p>
+                    <button id="panicBtn" class="px-8 py-3 demon-red rounded-full font-bold text-lg shadow-lg transform transition hover:scale-105">
+                        PANIC BUTTON
+                    </button>
+                </div>
+                
+                <div class="bg-gray-700 p-3 rounded-lg mb-4">
+                    <h3 class="font-semibold mb-2 flex items-center">
+                        <i class="fas fa-mobile-alt mr-2"></i> Focus Mode
+                    </h3>
+                    <div class="flex justify-between items-center">
+                        <span>Phone Lock Timer</span>
+                        <select id="phoneLockTimerSelect" class="bg-gray-800 rounded px-2 py-1 text-sm">
+                            <option value="30 min">30 min</option>
+                            <option value="60 min">60 min</option>
+                            <option value="90 min">90 min</option>
+                            <option value="120 min">120 min</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-700 p-3 rounded-lg">
+                    <h3 class="font-semibold mb-2 flex items-center">
+                        <i class="fas fa-list mr-2"></i> App Whitelist
+                    </h3>
+                    <div id="appWhitelistContainer" class="space-y-2">
+                        </div>
+                    <div class="mt-3">
+                        <input type="text" id="newAppWhitelistInput" placeholder="Add app to whitelist" class="w-full bg-gray-800 rounded-lg p-2 text-sm">
+                        <button id="addAppWhitelistBtn" class="w-full py-2 bg-gray-800 rounded-lg mt-3 text-sm">
+                            <i class="fas fa-plus mr-1"></i> Add App
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-900 shadow-lg z-40">
+        <div class="flex justify-around">
+            <a href="#dashboard" class="nav-link flex flex-col items-center py-3 px-4 text-xs demon-red-text" data-section="dashboard">
+                <i class="fas fa-fire text-lg mb-1"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#protocolLogger" class="nav-link flex flex-col items-center py-3 px-4 text-xs text-gray-400" data-section="protocolLogger">
+                <i class="far fa-calendar-alt text-lg mb-1"></i>
+                <span>Logger</span>
+            </a>
+            <a href="#progressAnalytics" class="nav-link flex flex-col items-center py-3 px-4 text-xs text-gray-400" data-section="progressAnalytics">
+                <i class="fas fa-chart-line text-lg mb-1"></i>
+                <span>Progress</span>
+            </a>
+            <a href="#knowledge" class="nav-link flex flex-col items-center py-3 px-4 text-xs text-gray-400" data-section="knowledge">
+                <i class="fas fa-book text-lg mb-1"></i>
+                <span>Knowledge</span>
+            </a>
+            <a href="#secretMode" class="nav-link flex flex-col items-center py-3 px-4 text-xs text-gray-400" data-section="secretMode">
+                <i class="fas fa-lock text-lg mb-1"></i>
+                <span>Secret</span>
+            </a>
+        </div>
+    </div>
+    
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Settings</h3>
+                <button id="closeSettings" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">Theme</h4>
+                    <div class="flex space-x-3">
+                        <button id="darkModeBtn" class="flex-1 py-3 bg-gray-700 rounded-lg">
+                            Dark Mode
+                        </button>
+                        <button id="infernoModeBtn" class="flex-1 py-3 demon-red rounded-lg">
+                            Inferno Mode
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">Notifications</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span>Morning Demon Wake-up</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="morningWakeupToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Workout Reminders</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="workoutRemindersToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Hydration Alerts</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="hydrationAlertsToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">Profile</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Name</label>
+                            <input type="text" id="profileNameInput" class="w-full bg-gray-700 rounded-lg p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Age</label>
+                            <input type="number" id="profileAgeInput" class="w-full bg-gray-700 rounded-lg p-2 min="1" max="120">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Gender</label>
+                            <select id="profileGenderSelect" class="w-full bg-gray-700 rounded-lg p-2">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Height (cm)</label>
+                            <input type="number" id="profileHeightCmInput" class="w-full bg-gray-700 rounded-lg p-2 min="1" max="300">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Weight (kg)</label>
+                            <input type="number" id="profileWeightKgInput" class="w-full bg-gray-700 rounded-lg p-2 min="1" max="300">
+                        </div>
+                         <div>
+                            <label class="block text-sm text-gray-400 mb-1">Activity Level</label>
+                            <select id="profileActivityLevelSelect" class="w-full bg-gray-700 rounded-lg p-2">
+                                <option value="1.2">Sedentary (little to no exercise)</option>
+                                <option value="1.375">Lightly Active (light exercise 1-3 days/week)</option>
+                                <option value="1.55">Moderately Active (moderate exercise 3-5 days/week)</option>
+                                <option value="1.725">Very Active (hard exercise 6-7 days/week)</option>
+                                <option value="1.9">Extra Active (very hard exercise & physical job/2x day training)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Weight Goal</label>
+                            <input type="text" id="weightGoalInput" class="w-full bg-gray-700 rounded-lg p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Daily Calorie Target (manual override)</label>
+                            <input type="number" id="calorieTargetInput" class="w-full bg-gray-700 rounded-lg p-2">
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="saveSettingsBtn" class="w-full py-3 demon-red rounded-lg font-medium">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="panicModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 rounded-lg w-full max-w-md mx-4 p-6 text-center">
+            <div class="w-24 h-24 demon-red rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <i class="fas fa-skull text-4xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">DEMON ACTIVATED</h3>
+            <p class="text-gray-300 mb-6">Weakness has been purged from your system.</p>
+            
+            <div class="mb-6">
+                <p class="font-medium mb-2">"THE PAIN YOU FEEL TODAY WILL BE THE STRENGTH YOU FEEL TOMORROW."</p>
+                <p class="text-xs text-gray-500">- Demon Mode Mantra</p>
+            </div>
+            
+            <audio id="motivationAudio" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" preload="auto"></audio>
+            <button id="playAudio" class="px-6 py-2 bg-gray-800 rounded-full mb-3">
+                <i class="fas fa-play mr-2"></i> Play Motivation Audio
+            </button>
+            <button id="closePanic" class="w-full py-3 demon-red rounded-lg font-medium">
+                RETURN TO BATTLE
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // --- App Data (Central State) ---
+        let appData = {};
+
+        // Default Data (used if no saved data in localStorage)
+        const defaultAppData = {
+            demonScore: 87,
+            demonScoreWeeklyChange: "+12%",
+            calories: {
+                in: 1800,
+                out: 2400, // This will be TDEE later
+                targetIn: 2000 // Target for calories in
+            },
+            workouts: {
+                am: { type: "AM Run", details: "5.2km @5:20/km" },
+                pm: { type: "PM Gym", details: "Chest/Tri 90min" }
+            },
+            steps: {
+                current: 12345,
+                target: 15000
+            },
+            hydration: {
+                waterLiters: 4.2,
+                waterTarget: 5.0,
+                coffeeCups: 2,
+                coffeeTarget: 3
+            },
+            streak: 14,
+            moodFocus: 75, // value from 1-100
+            moodNote: "", // Added mood note
+            nutritionLog: [
+                { id: 1, time: "07:30 AM", calories: 680, protein: 45, carbs: 80, fats: 15, description: "4 eggs, 100g oats, banana, chia seeds, protein shake" },
+                { id: 2, time: "12:45 PM", calories: 720, protein: 55, carbs: 60, fats: 20, description: "200g chicken breast, 150g rice, mixed vegetables, flaxseeds" }
+            ],
+            supplements: ["Creatine (5g)", "Multivitamin", "Omega-3", "Green Tea x2"],
+            workoutLog: [
+                { id: 1, type: "Morning Routine", entries: ["Run: 5.2km in 27:45 (5:20/km) - Trail", "Abs Circuit: 100 reps total (4 exercises)", "Resistance Bands: 3x15 shoulder rotations"] },
+                { id: 2, type: "Evening Gym - Chest & Triceps", entries: ["Bench Press: 4x8 @80kg", "Incline DB Press: 3x10 @30kg", "Cable Flys: 3x12 @25kg", "Skull Crushers: 4x10 @25kg", "Treadmill Walk: 20min @12% incline"] }
+            ],
+            disciplineChecks: {
+                noSugar: true,
+                noOil: true,
+                noCheatMeals: true,
+                noEjaculation: true,
+                protocolFollowed: true
+            },
+            remarks: "Felt strong during workout, slight DOMS from yesterday's leg day.",
+            reflection: "Completed all workouts despite feeling tired. Need to improve sleep quality.",
+            journalConquests: `1. Woke up at 4:30 AM without snooze
+2. Completed morning run in pouring rain
+3. Said NO to office donuts
+4. Pushed through last set when I wanted to quit`,
+            affirmations: [
+                "Discipline is choosing between what you want now and what you want most.",
+                "The only way to do great work is to love what you do.",
+                "Believe you can and you're halfway there.",
+                "Success is not final, failure is not fatal: it is the courage to continue that counts."
+            ],
+            currentAffirmationIndex: 0,
+            bodyMetrics: {
+                weight: [82, 80.5, 79.2, 78.7, 78.4, 78.1],
+                bodyFat: [18, 16.5, 15.8, 15.2, 14.8, 14.2],
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+            },
+            muscleFrequency: {
+                chest: 8,
+                back: 6,
+                legs: 5,
+                maxSessions: 10 // For progress bar calculation
+            },
+            runningProgress: {
+                vo2max: 48,
+                fivekPB: "24:30",
+                monthlyKm: 68.4,
+                distances: [15, 18, 20, 15.4],
+                paces: [5.8, 5.6, 5.4, 5.3],
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+            },
+            achievements: [
+                { id: 1, title: "7 Days No Cheat", unlockedDate: "12/06/23", details: "Current streak: 14d", iconClass: "fa-fire", colorClass: "demon-red", progress: 100 },
+                { id: 2, title: "Max Hydration Demon", unlockedDate: "05/06/23", details: "5L daily for 7d", iconClass: "fa-tint", colorClass: "bg-blue-500", progress: 100 },
+                { id: 3, title: "100km Run Club", unlockedDate: null, details: "Progress: 68.4/100km", iconClass: "fa-running", colorClass: "bg-green-500", progress: 68.4 },
+                { id: 4, title: "1000 Core Reps", unlockedDate: null, details: "Progress: 720/1000", iconClass: "fa-dumbbell", colorClass: "bg-purple-500", progress: 72 }
+            ],
+            demonEvolution: {
+                rank: "Soldier",
+                progress: 45 // percent
+            },
+            settings: {
+                theme: "Inferno Mode",
+                notifications: {
+                    morningWakeup: true,
+                    workoutReminders: true,
+                    hydrationAlerts: false
+                },
+                profile: {
+                    name: "Demon Soldier",
+                    age: 30, // New field
+                    gender: "male", // New field
+                    heightCm: 175, // New field
+                    weightKg: 78.1, // Updated from bodyMetrics initial state
+                    activityLevel: 1.55, // New field (Moderately Active)
+                    weightGoal: "75kg (10% BF)",
+                    calorieTarget: 1800 // Changed to number
+                }
+            },
+            focusMode: {
+                phoneLockTimer: "90 min",
+                appWhitelist: ["Demon Mode Protocol", "Music"]
+            }
+        };
+
+        // --- Chart Instances (Global scope for updates) ---
+        let weightChart;
+        let runningChart;
+
+        // --- Data Persistence ---
+        function loadData() {
+            const savedData = localStorage.getItem('demonModeData');
+            if (savedData) {
+                appData = JSON.parse(savedData);
+                // Deep merge with default to ensure new fields are added if the schema changes
+                appData = mergeDeep(defaultAppData, appData);
+            } else {
+                appData = JSON.parse(JSON.stringify(defaultAppData)); // Use a deep copy of defaults
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('demonModeData', JSON.stringify(appData));
+        }
+
+        // Deep merge utility function (for combining defaultAppData with savedData)
+        function isObject(item) {
+            return (item && typeof item === 'object' && !Array.isArray(item));
+        }
+        function mergeDeep(target, source) {
+            let output = Object.assign({}, target);
+            if (isObject(target) && isObject(source)) {
+                Object.keys(source).forEach(key => {
+                    if (isObject(source[key])) {
+                        if (!(key in target))
+                            Object.assign(output, { [key]: source[key] });
+                        else
+                            output[key] = mergeDeep(target[key], source[key]);
+                    } else {
+                        Object.assign(output, { [key]: source[key] });
+                    }
+                });
+            }
+            return output;
+        }
+
+        // --- Calculation Functions ---
+        function calculateBMI(weightKg, heightCm) {
+            if (!weightKg || !heightCm || heightCm === 0) return 'N/A';
+            const heightM = heightCm / 100;
+            const bmi = weightKg / (heightM * heightM);
+            return bmi.toFixed(2);
+        }
+
+        function getBMICategory(bmi) {
+            if (bmi === 'N/A' || isNaN(parseFloat(bmi))) return '';
+            const bmiNum = parseFloat(bmi);
+            if (bmiNum < 18.5) return 'Underweight';
+            if (bmiNum >= 18.5 && bmiNum <= 24.9) return 'Normal weight';
+            if (bmiNum >= 25 && bmiNum <= 29.9) return 'Overweight';
+            return 'Obese';
+        }
+
+        // Mifflin-St Jeor Equation for BMR
+        function calculateBMR(weightKg, heightCm, ageYears, gender) {
+            if (!weightKg || !heightCm || !ageYears || !gender) return 'N/A';
+            let bmr;
+            if (gender === 'male') {
+                bmr = (9.99 * weightKg) + (6.25 * heightCm) - (4.92 * ageYears) + 5;
+            } else if (gender === 'female') {
+                bmr = (9.99 * weightKg) + (6.25 * heightCm) - (4.92 * ageYears) - 161;
+            }
+            return bmr ? Math.round(bmr) : 'N/A';
+        }
+
+        function calculateTDEE(bmr, activityLevel) {
+            if (bmr === 'N/A' || !activityLevel) return 'N/A';
+            return Math.round(bmr * parseFloat(activityLevel));
+        }
+
+        // --- UI Rendering Functions ---
+
+        function renderDashboard() {
+            document.getElementById('demonScoreValue').textContent = `${appData.demonScore}%`;
+            document.getElementById('demonScoreFill').style.width = `${appData.demonScore}%`;
+            document.getElementById('demonScoreWeeklyChange').textContent = appData.demonScoreWeeklyChange;
+
+            const tdee = calculateTDEE(
+                calculateBMR(appData.settings.profile.weightKg, appData.settings.profile.heightCm, appData.settings.profile.age, appData.settings.profile.gender),
+                appData.settings.profile.activityLevel
+            );
+            appData.calories.out = tdee; // Update calories out based on TDEE
+            
+            document.querySelector('.calories-in').textContent = `In: ${appData.calories.in}`;
+            document.querySelector('.calories-out').textContent = `Out: ${appData.calories.out}`;
+            document.querySelector('.calories-deficit').textContent = `${appData.calories.out !== 'N/A' ? appData.calories.out - appData.calories.in : 'N/A'}`;
+            // Use current calories in vs target calories in for the fill
+            document.getElementById('caloriesFill').style.width = `${(appData.calories.in / appData.calories.targetIn) * 100}%`; 
+            
+            document.getElementById('amWorkoutSummary').innerHTML = `
+                <div class="text-gray-400">${appData.workouts.am.type}</div>
+                <div>${appData.workouts.am.details}</div>
+            `;
+            document.getElementById('pmWorkoutSummary').innerHTML = `
+                <div class="text-gray-400">${appData.workouts.pm.type}</div>
+                <div>${appData.workouts.pm.details}</div>
+            `;
+
+            document.getElementById('currentSteps').textContent = appData.steps.current;
+            document.getElementById('targetSteps').textContent = (appData.steps.target / 1000); // Display in k
+            document.getElementById('stepsProgressFill').style.width = `${(appData.steps.current / appData.steps.target) * 100}%`;
+
+            document.getElementById('currentHydration').textContent = appData.hydration.waterLiters.toFixed(1);
+            document.getElementById('targetHydration').textContent = appData.hydration.waterTarget.toFixed(1);
+            document.getElementById('hydrationProgressFill').style.width = `${(appData.hydration.waterLiters / appData.hydration.waterTarget) * 100}%`;
+
+            document.getElementById('bmiValue').textContent = calculateBMI(appData.settings.profile.weightKg, appData.settings.profile.heightCm);
+            document.getElementById('bmiCategory').textContent = getBMICategory(document.getElementById('bmiValue').textContent);
+            document.getElementById('bmrValue').textContent = calculateBMR(appData.settings.profile.weightKg, appData.settings.profile.heightCm, appData.settings.profile.age, appData.settings.profile.gender);
+            document.getElementById('tdeeValue').textContent = tdee;
+
+            document.getElementById('moodFocusSlider').value = appData.moodFocus;
+            document.getElementById('moodNoteInput').value = appData.moodNote;
+
+
+            const streakBarContainer = document.getElementById('streakBarContainer');
+            streakBarContainer.innerHTML = '';
+            for (let i = 0; i < 20; i++) { // Render up to 20 days
+                const div = document.createElement('div');
+                div.className = `h-4 flex-1 rounded ${i < appData.streak ? 'streak-green' : 'bg-gray-700'}`;
+                div.title = `Day ${i + 1}`;
+                streakBarContainer.appendChild(div);
+            }
+            document.getElementById('currentStreakDisplay').textContent = `Current Streak: ${appData.streak} days`;
+        }
+
+        function renderProtocolLogger() {
+            // Nutrition Log
+            const mealLogContainer = document.getElementById('mealLogContainer');
+            mealLogContainer.innerHTML = '';
+            appData.nutritionLog.forEach(meal => {
+                mealLogContainer.innerHTML += `
+                    <div class="bg-gray-700 p-3 rounded-lg flex flex-col">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-medium">Meal - ${meal.time}</h4>
+                            <span class="text-sm text-gray-400">${meal.calories} kcal | P:${meal.protein}g C:${meal.carbs}g F:${meal.fats}g</span>
+                        </div>
+                        <div class="text-sm text-gray-300 editable-content meal-description" data-id="${meal.id}">${meal.description}</div>
+                        <div class="flex justify-end gap-2 mt-2">
+                            <button class="edit-btn text-blue-400 text-xs" data-id="${meal.id}" data-type="meal">Edit</button>
+                            <button class="remove-btn text-red-400 text-xs" data-id="${meal.id}" data-type="meal">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Supplements
+            const supplementLogContainer = document.getElementById('supplementLogContainer');
+            supplementLogContainer.innerHTML = '';
+            appData.supplements.forEach((sup, index) => {
+                supplementLogContainer.innerHTML += `
+                    <span class="bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        ${sup}
+                        <button class="remove-btn text-red-400 text-xs ml-1" data-id="${index}" data-type="supplement">&times;</button>
+                    </span>
+                `;
+            });
+            document.getElementById('omadToggle').checked = appData.nutritionLog.some(meal => meal.omad); // Assuming if any meal is OMAD, the toggle is on
+
+            // Workout Log
+            const workoutLogContainer = document.getElementById('workoutLogContainer');
+            workoutLogContainer.innerHTML = '';
+            appData.workoutLog.forEach(workout => {
+                const entriesHtml = workout.entries.map(entry => `<span>${entry}</span>`).join('<br>');
+                workoutLogContainer.innerHTML += `
+                    <div class="bg-gray-700 p-3 rounded-lg flex flex-col">
+                        <h4 class="font-medium mb-2">${workout.type}</h4>
+                        <div class="text-sm space-y-1 editable-content workout-entries" data-id="${workout.id}">${entriesHtml}</div>
+                        <div class="flex justify-end gap-2 mt-2">
+                             <button class="edit-btn text-blue-400 text-xs" data-id="${workout.id}" data-type="workout">Edit</button>
+                            <button class="remove-btn text-red-400 text-xs" data-id="${workout.id}" data-type="workout">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Hydration Tracker
+            document.getElementById('waterIntakeDisplay').textContent = appData.hydration.waterLiters.toFixed(1);
+            document.getElementById('waterTargetDisplay').textContent = appData.hydration.waterTarget.toFixed(1);
+            const waterDropContainer = document.getElementById('waterDropContainer');
+            waterDropContainer.innerHTML = '';
+            // Render up to max 5 drops, even if target is higher for visual consistency
+            const maxDropsVisual = 5; 
+            const literPerDrop = appData.hydration.waterTarget / maxDropsVisual; // How many liters each visual drop represents
+            for (let i = 0; i < maxDropsVisual; i++) {
+                const drop = document.createElement('div');
+                // Check if the current drop index is within the filled range
+                drop.className = `water-drop ${i * literPerDrop < appData.hydration.waterLiters ? '' : 'empty'}`;
+                waterDropContainer.appendChild(drop);
+            }
+
+            document.getElementById('coffeeIntakeDisplay').textContent = appData.hydration.coffeeCups;
+            document.getElementById('coffeeTargetDisplay').textContent = appData.hydration.coffeeTarget;
+            const coffeeIconContainer = document.getElementById('coffeeIconContainer');
+            coffeeIconContainer.innerHTML = '';
+            for (let i = 0; i < appData.hydration.coffeeTarget; i++) {
+                const icon = document.createElement('i');
+                icon.className = `fas fa-coffee ${i < appData.hydration.coffeeCups ? 'text-gray-400' : 'text-gray-300'}`;
+                coffeeIconContainer.appendChild(icon);
+            }
+
+            // Discipline & Compliance
+            document.getElementById('noSugarCheck').checked = appData.disciplineChecks.noSugar;
+            document.getElementById('noOilCheck').checked = appData.disciplineChecks.noOil;
+            document.getElementById('noCheatMealsCheck').checked = appData.disciplineChecks.noCheatMeals;
+            document.getElementById('noEjaculationCheck').checked = appData.disciplineChecks.noEjaculation;
+            document.getElementById('protocolFollowedCheck').checked = appData.disciplineChecks.protocolFollowed;
+            
+            document.getElementById('remarksTextarea').value = appData.remarks;
+        }
+
+        function renderMindAndDiscipline() {
+            document.getElementById('reflectionTextarea').value = appData.reflection;
+            document.getElementById('journalConquestsTextarea').value = appData.journalConquests;
+            document.getElementById('currentAffirmationDisplay').textContent = `"${appData.affirmations[appData.currentAffirmationIndex]}"`;
+
+            const totalChecks = Object.keys(appData.disciplineChecks).length;
+            const completedChecks = Object.values(appData.disciplineChecks).filter(Boolean).length;
+            const behavioralScore = totalChecks > 0 ? (completedChecks / totalChecks * 10).toFixed(1) : '0.0';
+            const selfRatedScore = (appData.moodFocus / 100 * 10).toFixed(1);
+            const overallDisciplineScore = (((parseFloat(behavioralScore) || 0) + parseFloat(selfRatedScore)) / 2).toFixed(1);
+
+            document.getElementById('disciplineScoreCircle').textContent = overallDisciplineScore;
+            document.getElementById('behavioralScore').textContent = `${behavioralScore}/10`;
+            document.getElementById('selfRatedScore').textContent = `${selfRatedScore}/10`;
+        }
+
+        function renderProgressAnalytics() {
+            const lastWeight = appData.bodyMetrics.weight[appData.bodyMetrics.weight.length - 1];
+            const firstWeight = appData.bodyMetrics.weight[0];
+            const weightChange = (firstWeight - lastWeight).toFixed(1);
+            document.getElementById('currentWeightDisplay').textContent = lastWeight.toFixed(1);
+            document.getElementById('weightChangeDisplay').textContent = `▼ ${weightChange}kg (30d)`;
+
+            const lastBodyFat = appData.bodyMetrics.bodyFat[appData.bodyMetrics.bodyFat.length - 1];
+            const firstBodyFat = appData.bodyMetrics.bodyFat[0];
+            const bodyFatChange = (firstBodyFat - lastBodyFat).toFixed(1);
+            document.getElementById('currentBodyFatDisplay').textContent = lastBodyFat.toFixed(1);
+            document.getElementById('bodyFatChangeDisplay').textContent = `▼ ${bodyFatChange}% (30d)`;
+
+            // Update Chart.js data
+            updateCharts();
+
+            document.getElementById('chestSessions').textContent = `${appData.muscleFrequency.chest} sessions`;
+            document.getElementById('chestProgressFill').style.width = `${(appData.muscleFrequency.chest / appData.muscleFrequency.maxSessions) * 100}%`;
+            document.getElementById('backSessions').textContent = `${appData.muscleFrequency.back} sessions`;
+            document.getElementById('backProgressFill').style.width = `${(appData.muscleFrequency.back / appData.muscleFrequency.maxSessions) * 100}%`;
+            document.getElementById('legsSessions').textContent = `${appData.muscleFrequency.legs} sessions`;
+            document.getElementById('legsProgressFill').style.width = `${(appData.muscleFrequency.legs / appData.muscleFrequency.maxSessions) * 100}%`;
+
+            document.getElementById('vo2MaxDisplay').textContent = appData.runningProgress.vo2max;
+            document.getElementById('fiveKPBDisplay').textContent = appData.runningProgress.fivekPB;
+            document.getElementById('monthlyKmDisplay').textContent = appData.runningProgress.monthlyKm;
+        }
+
+        function renderAchievements() {
+            document.getElementById('demonEvolutionRank').textContent = appData.demonEvolution.rank;
+            document.getElementById('demonEvolutionProgress').style.width = `${appData.demonEvolution.progress}%`;
+
+            const achievementsContainer = document.getElementById('achievementsContainer');
+            achievementsContainer.innerHTML = '';
+            appData.achievements.forEach(ach => {
+                const progressHtml = ach.progress < 100 ? `
+                    <div class="text-xs mb-1">${ach.details}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${ach.colorClass}" style="width: ${ach.progress}%"></div>
+                    </div>
+                ` : `
+                    <div class="text-xs mb-1">Unlocked: ${ach.unlockedDate}</div>
+                    <div class="text-xs">${ach.details}</div>
+                `;
+
+                achievementsContainer.innerHTML += `
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front bg-gray-700 p-3 rounded-lg text-center">
+                                <div class="w-12 h-12 ${ach.colorClass} rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas ${ach.iconClass}"></i>
+                                </div>
+                                <div class="text-sm">${ach.title}</div>
+                            </div>
+                            <div class="flip-card-back bg-gray-700 p-3 rounded-lg text-center flex items-center justify-center">
+                                <div>
+                                    ${progressHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderKnowledge() {
+            // This section is mostly static knowledge. No dynamic updates from appData currently.
+            // If you want to make the Code of Conduct editable and savable, uncomment the relevant lines.
+            document.getElementById('codeOfConductTextarea').value = `1. Wake up at 4:30 AM daily
+2. No processed sugar or seed oils
+3. Minimum 5L water daily
+4. Train twice daily (AM cardio/PM weights)
+5. No porn or meaningless stimulation
+6. Cold showers only
+7. Daily reflection and planning`;
+        }
+
+        function renderSecretMode() {
+            document.getElementById('phoneLockTimerSelect').value = appData.focusMode.phoneLockTimer;
+
+            const appWhitelistContainer = document.getElementById('appWhitelistContainer');
+            appWhitelistContainer.innerHTML = '';
+            appData.focusMode.appWhitelist.forEach((app, index) => {
+                appWhitelistContainer.innerHTML += `
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2 app-whitelist-checkbox" data-app="${app}" ${appData.focusMode.appWhitelist.includes(app) ? 'checked' : ''}>
+                            <span class="text-sm">${app}</span>
+                        </label>
+                        <button class="remove-btn text-red-400 text-xs" data-id="${index}" data-type="whitelistApp">&times;</button>
+                    </div>
+                `;
+            });
+        }
+
+        function renderSettingsModal() {
+            const theme = appData.settings.theme;
+            document.getElementById('darkModeBtn').classList.toggle('demon-red', theme === 'Dark Mode');
+            document.getElementById('darkModeBtn').classList.toggle('bg-gray-700', theme !== 'Dark Mode');
+            document.getElementById('infernoModeBtn').classList.toggle('demon-red', theme === 'Inferno Mode');
+            document.getElementById('infernoModeBtn').classList.toggle('bg-gray-700', theme !== 'Inferno Mode');
+
+            document.getElementById('morningWakeupToggle').checked = appData.settings.notifications.morningWakeup;
+            document.getElementById('workoutRemindersToggle').checked = appData.settings.notifications.workoutReminders;
+            document.getElementById('hydrationAlertsToggle').checked = appData.settings.notifications.hydrationAlerts;
+
+            // Profile fields
+            document.getElementById('profileNameInput').value = appData.settings.profile.name;
+            document.getElementById('profileAgeInput').value = appData.settings.profile.age;
+            document.getElementById('profileGenderSelect').value = appData.settings.profile.gender;
+            document.getElementById('profileHeightCmInput').value = appData.settings.profile.heightCm;
+            document.getElementById('profileWeightKgInput').value = appData.settings.profile.weightKg;
+            document.getElementById('profileActivityLevelSelect').value = appData.settings.profile.activityLevel;
+            document.getElementById('weightGoalInput').value = appData.settings.profile.weightGoal;
+            document.getElementById('calorieTargetInput').value = appData.settings.profile.calorieTarget;
+        }
+
+        // --- Main Render Function ---
+        function renderUI() {
+            renderDashboard();
+            renderProtocolLogger();
+            renderMindAndDiscipline();
+            renderProgressAnalytics();
+            renderAchievements();
+            renderKnowledge();
+            renderSecretMode(); 
+
+            saveData(); // Save data after every UI render
+        }
+
+        // --- Chart.js Initialization & Update ---
+        function initializeCharts() {
+            const weightCtx = document.getElementById('weightChart').getContext('2d');
+            weightChart = new Chart(weightCtx, {
+                type: 'line',
+                data: {
+                    labels: appData.bodyMetrics.labels,
+                    datasets: [{
+                        label: 'Weight (kg)',
+                        data: appData.bodyMetrics.weight,
+                        borderColor: '#e94560',
+                        backgroundColor: 'rgba(233, 69, 96, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: 'Body Fat %',
+                        data: appData.bodyMetrics.bodyFat,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#fff' } },
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#fff' } }
+                    }
+                }
+            });
+            
+            const runningCtx = document.getElementById('runningChart').getContext('2d');
+            runningChart = new Chart(runningCtx, {
+                type: 'bar',
+                data: {
+                    labels: appData.runningProgress.labels,
+                    datasets: [{
+                        label: 'Distance (km)',
+                        data: appData.runningProgress.distances,
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Avg Pace (min/km)',
+                        data: appData.runningProgress.paces,
+                        backgroundColor: 'rgba(233, 69, 96, 0.7)',
+                        borderColor: 'rgba(233, 69, 96, 1)',
+                        borderWidth: 1,
+                        type: 'line',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#fff' } },
+                        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false, color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#fff' } },
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (weightChart) {
+                weightChart.data.labels = appData.bodyMetrics.labels;
+                weightChart.data.datasets[0].data = appData.bodyMetrics.weight;
+                weightChart.data.datasets[1].data = appData.bodyMetrics.bodyFat;
+                weightChart.update();
+            }
+            if (runningChart) {
+                runningChart.data.labels = appData.runningProgress.labels;
+                runningChart.data.datasets[0].data = appData.runningProgress.distances;
+                runningChart.data.datasets[1].data = appData.runningProgress.paces;
+                runningChart.update();
+            }
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initializeCharts(); // Initialize charts with loaded data
+            renderUI(); // Render the UI based on loaded data
+
+            // --- Navigation Smooth Scrolling ---
+            document.querySelectorAll('a.nav-link[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    document.querySelectorAll('a.nav-link').forEach(link => {
+                        link.classList.remove('demon-red-text');
+                        link.classList.add('text-gray-400');
+                    });
+                    this.classList.add('demon-red-text');
+                    this.classList.remove('text-gray-400');
+
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Set initial active nav link
+            const currentHash = window.location.hash || '#dashboard';
+            const initialNavLink = document.querySelector(`.nav-link[href="${currentHash}"]`);
+            if (initialNavLink) {
+                initialNavLink.classList.add('demon-red-text');
+                initialNavLink.classList.remove('text-gray-400');
+            }
+
+
+            // --- Dashboard Interactions ---
+            document.getElementById('moodFocusSlider').addEventListener('input', (e) => {
+                appData.moodFocus = parseInt(e.target.value);
+                renderMindAndDiscipline(); // Only update related section for performance
+                saveData();
+            });
+            document.getElementById('moodNoteInput').addEventListener('blur', (e) => {
+                appData.moodNote = e.target.value;
+                saveData();
+            });
+
+            // --- Protocol Logger Interactions ---
+            document.getElementById('addMealBtn').addEventListener('click', () => {
+                const newMeal = {
+                    id: Date.now(), // Simple unique ID
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    calories: 0, 
+                    protein: 0, carbs: 0, fats: 0, // Start with 0, user can edit
+                    description: "New Meal (click edit to add details)",
+                    omad: document.getElementById('omadToggle').checked
+                };
+                appData.nutritionLog.push(newMeal);
+                renderUI();
+            });
+
+            document.getElementById('addSupplementBtn').addEventListener('click', () => {
+                const newSup = document.getElementById('newSupplementInput').value.trim();
+                if (newSup && !appData.supplements.includes(newSup)) {
+                    appData.supplements.push(newSup);
+                    document.getElementById('newSupplementInput').value = ''; // Clear input
+                    renderUI();
+                }
+            });
+
+            document.getElementById('addWorkoutBtn').addEventListener('click', () => {
+                const newWorkout = {
+                    id: Date.now(), // Simple unique ID
+                    type: "New Dynamic Workout (click edit to name)",
+                    entries: ["New Exercise: Add details here (e.g., 3x10 @Xkg)"]
+                };
+                appData.workoutLog.push(newWorkout);
+                renderUI();
+            });
+
+            document.getElementById('addWater250ml').addEventListener('click', () => {
+                appData.hydration.waterLiters = Math.min(appData.hydration.waterTarget, appData.hydration.waterLiters + 0.25);
+                renderUI();
+            });
+            document.getElementById('addWater500ml').addEventListener('click', () => {
+                appData.hydration.waterLiters = Math.min(appData.hydration.waterTarget, appData.hydration.waterLiters + 0.5);
+                renderUI();
+            });
+            document.getElementById('addCoffee').addEventListener('click', () => {
+                appData.hydration.coffeeCups = Math.min(appData.hydration.coffeeTarget, appData.hydration.coffeeCups + 1);
+                renderUI();
+            });
+
+            document.getElementById('omadToggle').addEventListener('change', (e) => {
+                // For simplicity, just update the omad status for all meals or apply to new meals
+                appData.nutritionLog.forEach(meal => meal.omad = e.target.checked);
+                saveData();
+            });
+
+            // Discipline Checkbox Listeners
+            document.getElementById('noSugarCheck').addEventListener('change', (e) => { appData.disciplineChecks.noSugar = e.target.checked; renderMindAndDiscipline(); saveData(); });
+            document.getElementById('noOilCheck').addEventListener('change', (e) => { appData.disciplineChecks.noOil = e.target.checked; renderMindAndDiscipline(); saveData(); });
+            document.getElementById('noCheatMealsCheck').addEventListener('change', (e) => { appData.disciplineChecks.noCheatMeals = e.target.checked; renderMindAndDiscipline(); saveData(); });
+            document.getElementById('noEjaculationCheck').addEventListener('change', (e) => { appData.disciplineChecks.noEjaculation = e.target.checked; renderMindAndDiscipline(); saveData(); });
+            document.getElementById('protocolFollowedCheck').addEventListener('change', (e) => { appData.disciplineChecks.protocolFollowed = e.target.checked; renderMindAndDiscipline(); saveData(); });
+
+            document.getElementById('remarksTextarea').addEventListener('blur', (e) => {
+                appData.remarks = e.target.value;
+                saveData();
+            });
+
+            // Event Delegation for Remove & Edit Buttons, and Editable Content
+            document.addEventListener('click', (event) => {
+                if (event.target.classList.contains('remove-btn')) {
+                    const idToRemove = event.target.dataset.id;
+                    const type = event.target.dataset.type;
+
+                    if (type === 'meal') {
+                        appData.nutritionLog = appData.nutritionLog.filter(meal => meal.id !== parseInt(idToRemove));
+                    } else if (type === 'supplement') {
+                        appData.supplements.splice(parseInt(idToRemove), 1); // remove by index for supplements
+                    } else if (type === 'workout') {
+                        appData.workoutLog = appData.workoutLog.filter(workout => workout.id !== parseInt(idToRemove));
+                    } else if (type === 'whitelistApp') {
+                        appData.focusMode.appWhitelist.splice(parseInt(idToRemove), 1);
+                    }
+                    renderUI();
+                } else if (event.target.classList.contains('edit-btn')) {
+                    const idToEdit = event.target.dataset.id;
+                    const type = event.target.dataset.type;
+                    let targetElement;
+                    let item;
+
+                    if (type === 'meal') {
+                        item = appData.nutritionLog.find(meal => meal.id === parseInt(idToEdit));
+                        targetElement = event.target.closest('.bg-gray-700').querySelector('.meal-description');
+                    } else if (type === 'workout') {
+                        item = appData.workoutLog.find(workout => workout.id === parseInt(idToEdit));
+                        targetElement = event.target.closest('.bg-gray-700').querySelector('.workout-entries');
+                    }
+
+                    if (targetElement && item) {
+                        const originalContent = targetElement.innerHTML.replace(/<br>/g, '\n'); // Convert <br> to newlines for textarea
+                        const textarea = document.createElement('textarea');
+                        textarea.className = 'w-full bg-gray-800 rounded-lg p-3 text-sm mt-2';
+                        textarea.rows = 4;
+                        textarea.value = originalContent;
+
+                        targetElement.replaceWith(textarea);
+                        textarea.focus();
+
+                        textarea.addEventListener('blur', () => {
+                            let newContent = textarea.value.trim();
+                            if (type === 'meal') {
+                                item.description = newContent;
+                            } else if (type === 'workout') {
+                                // For workout entries, convert newlines back to <br> for display
+                                item.entries = newContent.split('\n').filter(entry => entry.trim() !== '');
+                                if (item.entries.length === 0) item.entries = ["No details provided"]; // Prevent empty workout entry
+                            }
+                            renderUI(); // Re-render the whole UI to show changes
+                        });
+                    }
+                }
+            });
+
+
+            // --- Mind & Discipline Interactions ---
+            document.getElementById('reflectionTextarea').addEventListener('blur', (e) => {
+                appData.reflection = e.target.value;
+                saveData();
+            });
+            document.getElementById('journalConquestsTextarea').addEventListener('blur', (e) => {
+                appData.journalConquests = e.target.value;
+                saveData();
+            });
+            document.getElementById('generateAffirmationBtn').addEventListener('click', () => {
+                appData.currentAffirmationIndex = (appData.currentAffirmationIndex + 1) % appData.affirmations.length;
+                renderMindAndDiscipline();
+                saveData();
+            });
+
+
+            // --- Secret Mode Interactions ---
+            document.getElementById('phoneLockTimerSelect').addEventListener('change', (e) => {
+                appData.focusMode.phoneLockTimer = e.target.value;
+                saveData();
+            });
+            document.getElementById('addAppWhitelistBtn').addEventListener('click', () => {
+                const newApp = document.getElementById('newAppWhitelistInput').value.trim();
+                if (newApp && !appData.focusMode.appWhitelist.includes(newApp)) {
+                    appData.focusMode.appWhitelist.push(newApp);
+                    document.getElementById('newAppWhitelistInput').value = '';
+                    renderUI();
+                }
+            });
+
+
+            // --- Settings Modal Functionality ---
+            const settingsModal = document.getElementById('settingsModal');
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                renderSettingsModal(); // Render settings with current appData before showing
+                settingsModal.classList.remove('hidden');
+            });
+            document.getElementById('closeSettings').addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+            document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                // Update profile data from inputs
+                appData.settings.profile.name = document.getElementById('profileNameInput').value;
+                appData.settings.profile.age = parseInt(document.getElementById('profileAgeInput').value) || appData.settings.profile.age;
+                appData.settings.profile.gender = document.getElementById('profileGenderSelect').value;
+                appData.settings.profile.heightCm = parseFloat(document.getElementById('profileHeightCmInput').value) || appData.settings.profile.heightCm;
+                appData.settings.profile.weightKg = parseFloat(document.getElementById('profileWeightKgInput').value) || appData.settings.profile.weightKg;
+                appData.settings.profile.activityLevel = parseFloat(document.getElementById('profileActivityLevelSelect').value);
+                appData.settings.profile.weightGoal = document.getElementById('weightGoalInput').value;
+                appData.settings.profile.calorieTarget = parseInt(document.getElementById('calorieTargetInput').value) || appData.settings.profile.calorieTarget;
+                
+                // Update the last entry in bodyMetrics.weight with the current weight from settings
+                if (appData.bodyMetrics.weight.length > 0) {
+                    appData.bodyMetrics.weight[appData.bodyMetrics.weight.length - 1] = appData.settings.profile.weightKg;
+                } else {
+                    appData.bodyMetrics.weight.push(appData.settings.profile.weightKg);
+                    // If adding first weight, you might need to adjust labels/bodyFat too
+                }
+
+                saveData();
+                settingsModal.classList.add('hidden');
+                renderUI(); // Re-render main UI to show updated stats and profile
+            });
+
+            document.getElementById('darkModeBtn').addEventListener('click', () => {
+                appData.settings.theme = 'Dark Mode';
+                document.body.classList.remove('gradient-bg');
+                document.body.classList.add('bg-gray-900'); // Example dark mode bg
+                renderSettingsModal();
+                saveData();
+            });
+            document.getElementById('infernoModeBtn').addEventListener('click', () => {
+                appData.settings.theme = 'Inferno Mode';
+                document.body.classList.remove('bg-gray-900');
+                document.body.classList.add('gradient-bg'); // Example inferno mode bg
+                renderSettingsModal();
+                saveData();
+            });
+
+            document.getElementById('morningWakeupToggle').addEventListener('change', (e) => { appData.settings.notifications.morningWakeup = e.target.checked; saveData(); });
+            document.getElementById('workoutRemindersToggle').addEventListener('change', (e) => { appData.settings.notifications.workoutReminders = e.target.checked; saveData(); });
+            document.getElementById('hydrationAlertsToggle').addEventListener('change', (e) => { appData.settings.notifications.hydrationAlerts = e.target.checked; saveData(); });
+
+
+            // --- Panic Button Functionality ---
+            const panicModal = document.getElementById('panicModal');
+            const motivationAudio = document.getElementById('motivationAudio');
+
+            document.getElementById('panicBtn').addEventListener('click', () => {
+                panicModal.classList.remove('hidden');
+            });
+            
+            document.getElementById('closePanic').addEventListener('click', () => {
+                panicModal.classList.add('hidden');
+                motivationAudio.pause();
+                motivationAudio.currentTime = 0; // Reset audio
+                document.getElementById('playAudio').innerHTML = '<i class="fas fa-play mr-2"></i> Play Motivation Audio'; // Reset button text
+            });
+
+            document.getElementById('playAudio').addEventListener('click', () => {
+                if (motivationAudio.paused) {
+                    motivationAudio.play().catch(e => console.error("Audio playback failed:", e));
+                    document.getElementById('playAudio').innerHTML = '<i class="fas fa-pause mr-2"></i> Pause Audio';
+                } else {
+                    motivationAudio.pause();
+                    document.getElementById('playAudio').innerHTML = '<i class="fas fa-play mr-2"></i> Play Motivation Audio';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
