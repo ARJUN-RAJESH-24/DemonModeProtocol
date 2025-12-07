@@ -1,0 +1,13 @@
+
+# --- GIT CLEANUP RULES ---
+# Exclude large, externally managed SDKs and tools
+*.zip
+sdk/java/
+sdk/flutter/
+
+# Exclude build/log artifacts
+.dart_tool/
+analysis_log.txt
+errors.txt
+output.txt
+
