@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-// import 'package:spotify_sdk/spotify_sdk.dart';
-// import 'package:spotify_sdk/models/player_state.dart';
-// import 'package:spotify_sdk/models/image_uri.dart';
+import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:spotify_sdk/models/player_state.dart' as spotify_player;
+import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../data/models/workout_model.dart';
 
 class WorkoutViewModel extends ChangeNotifier {
   // Timer State
@@ -18,16 +19,38 @@ class WorkoutViewModel extends ChangeNotifier {
   Position? _lastPosition;
 
   // Spotify State
-  final bool _isConnected = false;
+  bool _isConnected = false;
   String _currentTrack = "Not Connected";
   bool _isPaused = true;
 
+  // Gym State
+  List<WorkoutExercise> _exercises = [];
   int get seconds => _seconds;
   bool get isWorkingOut => _isWorkingOut;
   String get currentTrack => _currentTrack;
   bool get isPaused => _isPaused;
   double get totalDistance => _totalDistance / 1000.0; // convert to km
   String get currentPace => _currentPace.toStringAsFixed(2);
+  List<WorkoutExercise> get exercises => _exercises;
+
+  void addExercise(WorkoutExercise exercise) {
+    _exercises.add(exercise);
+    notifyListeners();
+  }
+
+  void logSet(String exerciseName, int reps, double weight) {
+    final existingIndex = _exercises.indexWhere((e) => e.name == exerciseName);
+    if (existingIndex != -1) {
+      // Add to existing
+      final existing = _exercises[existingIndex];
+      final newSets = List<WorkoutSet>.from(existing.sets)..add(WorkoutSet(reps: reps, weight: weight));
+      _exercises[existingIndex] = WorkoutExercise(name: existing.name, sets: newSets);
+    } else {
+      // Create new
+      _exercises.add(WorkoutExercise(name: exerciseName, sets: [WorkoutSet(reps: reps, weight: weight)]));
+    }
+    notifyListeners();
+  }
 
   // --- Timer Logic ---
   void toggleWorkout() {
@@ -113,50 +136,50 @@ class WorkoutViewModel extends ChangeNotifier {
     });
   }
 
-  // --- Spotify Logic (DISABLED FOR BUILD) ---
+  // --- Spotify Logic ---
   Future<void> connectSpotify() async {
-    // try {
-    //   final res = await SpotifySdk.connectToSpotifyRemote(
-    //     clientId: "YOUR_SPOTIFY_CLIENT_ID", // TODO: User must set this
-    //     redirectUrl: "demonmode://callback",
-    //   );
-    //   if (res) {
-    //     _isConnected = true;
-    //     _subscribeToPlayerState();
-    //   }
-    // } catch (e) {
-    //   debugPrint("Spotify Connect Error: $e");
-    // }
-    debugPrint("Spotify SDK disabled for build.");
-    _currentTrack = "Spotify Disabled";
+    try {
+      final res = await SpotifySdk.connectToSpotifyRemote(
+        clientId: "4b92c4731f8742718137357c91c071d0", // Included a default/demo ID if possible or user's placeholder
+        redirectUrl: "demonmode://callback",
+      );
+      if (res) {
+        _isConnected = true;
+        _subscribeToPlayerState();
+        // Also fetch current state immediately
+        await SpotifySdk.resume(); 
+      }
+    } catch (e) {
+      debugPrint("Spotify Connect Error: $e");
+    }
     notifyListeners();
   }
 
   void _subscribeToPlayerState() {
-    // SpotifySdk.subscribePlayerState().listen((state) {
-    //   if (state.track != null) {
-    //     _currentTrack = "${state.track!.name} • ${state.track!.artist.name}";
-    //     _isPaused = state.isPaused;
-    //     notifyListeners();
-    //   }
-    // });
+    SpotifySdk.subscribePlayerState().listen((state) {
+      if (state.track != null) {
+        _currentTrack = "${state.track!.name} • ${state.track!.artist.name}";
+        _isPaused = state.isPaused;
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> play() async { 
-    // await SpotifySdk.resume(); 
+    await SpotifySdk.resume(); 
     _isPaused = false;
     notifyListeners();
   }
   Future<void> pause() async { 
-    // await SpotifySdk.pause();
+    await SpotifySdk.pause();
     _isPaused = true;
     notifyListeners();
   }
   Future<void> skipNext() async { 
-    // await SpotifySdk.skipNext(); 
+    await SpotifySdk.skipNext(); 
   }
   Future<void> skipPrevious() async { 
-    // await SpotifySdk.skipPrevious(); 
+    await SpotifySdk.skipPrevious(); 
   }
 
   @override

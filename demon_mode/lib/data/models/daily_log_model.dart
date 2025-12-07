@@ -8,6 +8,7 @@ class DailyLogModel {
   final String mood;
   final List<String> photoPaths;
   final String? notes; // Zen Mode thoughts
+  final Map<String, bool> customHabits;
 
   DailyLogModel({
     this.id,
@@ -17,6 +18,7 @@ class DailyLogModel {
     this.mood = 'Neutral',
     this.photoPaths = const [],
     this.notes,
+    this.customHabits = const {},
   });
 
   Map<String, dynamic> toJson() {
@@ -28,6 +30,7 @@ class DailyLogModel {
       'mood': mood,
       'photo_paths': jsonEncode(photoPaths),
       'notes': notes,
+      'custom_habits': jsonEncode(customHabits),
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -41,6 +44,7 @@ class DailyLogModel {
       mood: json['mood'] ?? 'Neutral',
       photoPaths: List<String>.from(jsonDecode(json['photo_paths'] ?? '[]')),
       notes: json['notes'],
+      customHabits: Map<String, bool>.from(jsonDecode(json['custom_habits'] ?? '{}')),
     );
   }
 
@@ -52,6 +56,7 @@ class DailyLogModel {
     String? mood,
     List<String>? photoPaths,
     String? notes,
+    Map<String, bool>? customHabits,
   }) {
     return DailyLogModel(
       id: id ?? this.id,
@@ -61,6 +66,7 @@ class DailyLogModel {
       mood: mood ?? this.mood,
       photoPaths: photoPaths ?? this.photoPaths,
       notes: notes ?? this.notes,
+      customHabits: customHabits ?? this.customHabits,
     );
   }
 }

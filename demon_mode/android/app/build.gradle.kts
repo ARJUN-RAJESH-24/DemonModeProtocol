@@ -20,6 +20,8 @@ android {
 
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["redirectSchemeName"] = "demonmode"
+        manifestPlaceholders["redirectHostName"] = "callback"
     }
 
     // Java/Kotlin modernization

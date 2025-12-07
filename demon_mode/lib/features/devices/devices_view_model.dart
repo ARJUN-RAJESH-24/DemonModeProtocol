@@ -19,7 +19,10 @@ class DevicesViewModel extends ChangeNotifier {
     _isScanning = true;
     notifyListeners();
 
-    FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+    FlutterBluePlus.startScan(
+      withServices: [Guid("180D")], // Heart Rate Service
+      timeout: const Duration(seconds: 10), // Increase timeout slightly
+    );
 
     FlutterBluePlus.scanResults.listen((results) {
       _scanResults = results;

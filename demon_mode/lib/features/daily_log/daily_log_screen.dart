@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_pallete.dart';
 import 'daily_log_view_model.dart';
-import 'widgets/glass_action_card.dart'; // We'll create this widget for glassmorphism
+import 'widgets/glass_action_card.dart';
+import '../settings/settings_view_model.dart';
 
 class DailyLogScreen extends StatefulWidget {
   const DailyLogScreen({super.key});
@@ -19,26 +20,57 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     super.initState();
     // Load log on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DailyLogViewModel>().loadLogForToday();
+      context.read<DailyLogViewModel>().loadLog(DateTime.now());
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DailyLogViewModel>();
+    final settingsVM = context.watch<SettingsViewModel>();
     final log = vm.currentLog;
 
-    if (vm.isLoading || log == null) {
-      return const Center(child: CircularProgressIndicator());
+    if (vm.isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppPallete.primaryColor));
+    }
+
+    if (log == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            const Text("Failed to load log.", style: TextStyle(color: Colors.white70)),
+            TextButton(
+              onPressed: () => vm.loadLog(DateTime.now()),
+              child: const Text("RETRY"),
+            )
+          ],
+        ),
+      );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Transformation'),
+        title: Text(
+           log.date.day == DateTime.now().day ? 'Daily Transformation' : "${log.date.year}-${log.date.month}-${log.date.day}",
+           style: const TextStyle(fontSize: 16),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () {}, // Future: Pick date
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: log.date,
+                firstDate: DateTime(2024),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) {
+                vm.loadLog(picked);
+              }
+            }, 
           )
         ],
       ),
@@ -89,6 +121,27 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 onChanged: (_) { HapticFeedback.mediumImpact(); vm.toggleWorkout(); },
               ),
             ),
+            
+            const SizedBox(height: 20),
+            
+            // Custom Habits Section
+            if (settingsVM.habits.isNotEmpty) ...[
+              _buildSectionHeader("Daily Habits"),
+              ...settingsVM.habits.map((habit) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: GlassActionCard(
+                  child: CheckboxListTile(
+                    title: Text(habit, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    value: log.customHabits[habit] ?? false,
+                    activeColor: AppPallete.primaryColor,
+                    onChanged: (val) { 
+                      HapticFeedback.lightImpact(); 
+                      vm.toggleCustomHabit(habit, val ?? false); 
+                    },
+                  ),
+                ),
+              )),
+            ],
 
              const SizedBox(height: 20),
 

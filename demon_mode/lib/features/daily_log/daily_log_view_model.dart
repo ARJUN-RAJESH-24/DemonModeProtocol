@@ -16,15 +16,18 @@ class DailyLogViewModel extends ChangeNotifier {
   DailyLogModel? get currentLog => _currentLog;
   bool get isLoading => _isLoading;
 
-  Future<void> loadLogForToday() async {
-    _isLoading = true;
-    notifyListeners();
-    
-    final today = DateTime.now();
-    _currentLog = await _repository.getLogForDate(today);
-    
-    _isLoading = false;
-    notifyListeners();
+  Future<void> loadLog(DateTime date) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      
+      _currentLog = await _repository.getLogForDate(date);
+    } catch (e) {
+      debugPrint("Error loading log: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> updateWater(int amount) async {
@@ -45,6 +48,15 @@ class DailyLogViewModel extends ChangeNotifier {
   Future<void> updateMood(String mood) async {
     if (_currentLog == null) return;
     _currentLog = _currentLog!.copyWith(mood: mood);
+    notifyListeners();
+    await _save();
+  }
+
+  Future<void> toggleCustomHabit(String habit, bool value) async {
+    if (_currentLog == null) return;
+    final newHabits = Map<String, bool>.from(_currentLog!.customHabits);
+    newHabits[habit] = value;
+    _currentLog = _currentLog!.copyWith(customHabits: newHabits);
     notifyListeners();
     await _save();
   }

@@ -10,6 +10,7 @@ import 'features/dashboard/dashboard_view_model.dart';
 import 'features/daily_log/daily_log_view_model.dart';
 import 'features/workout/workout_view_model.dart';
 import 'features/devices/devices_view_model.dart';
+import 'features/settings/settings_view_model.dart';
 
 void main() {
   runApp(const DemonModeApp());
@@ -26,6 +27,7 @@ class DemonModeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DailyLogViewModel()),
         ChangeNotifierProvider(create: (_) => WorkoutViewModel()),
         ChangeNotifierProvider(create: (_) => DevicesViewModel()),
+        ChangeNotifierProvider(create: (_) => SettingsViewModel()..init()),
       ],
       child: MaterialApp(
         title: 'Demon Mode Protocol',

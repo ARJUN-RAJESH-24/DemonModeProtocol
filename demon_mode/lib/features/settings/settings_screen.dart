@@ -8,10 +8,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SettingsViewModel()..init(),
-      child: const _SettingsBody(),
-    );
+    return const _SettingsBody();
   }
 }
 
@@ -30,6 +27,53 @@ class _SettingsBody extends StatelessWidget {
 
 
           
+          const SizedBox(height: 20),
+          const Text("CUSTOMIZATIONS", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
+          SwitchListTile(
+            title: const Text("Use Metric System (kg/km)"),
+            value: vm.unitSystem == 'metric',
+            activeColor: AppPallete.primaryColor,
+            onChanged: (val) => vm.toggleUnitSystem(val ? 'metric' : 'imperial'),
+          ),
+          const SizedBox(height: 10),
+          const Text("DAILY HABITS", style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ...vm.habits.map((habit) => ListTile(
+            title: Text(habit),
+            trailing: IconButton(
+              icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+              onPressed: () => vm.removeHabit(habit),
+            ),
+          )),
+          ListTile(
+            leading: const Icon(Icons.add, color: AppPallete.primaryColor),
+            title: const Text("Add Custom Habit"),
+            onTap: () async {
+              final controller = TextEditingController();
+              await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("New Habit"),
+                  content: TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(hintText: "e.g., Creatine, Read, Meditate"),
+                    autofocus: true,
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("CANCEL")),
+                    TextButton(
+                      onPressed: () {
+                         if (controller.text.isNotEmpty) {
+                           vm.addHabit(controller.text);
+                           Navigator.pop(ctx, true);
+                         }
+                      }, 
+                      child: const Text("ADD"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 20),
           const Text("DATA", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
           ListTile(

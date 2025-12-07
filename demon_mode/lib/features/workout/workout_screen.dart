@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_pallete.dart';
 import 'workout_view_model.dart';
 import '../daily_log/widgets/glass_action_card.dart';
+import '../../data/models/workout_model.dart';
 
 class WorkoutScreen extends StatelessWidget {
   const WorkoutScreen({super.key});
@@ -38,18 +39,23 @@ class _WorkoutBody extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('DEMON MODE // TRAIN')),
-      body: Padding(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddSetDialog(context, vm),
+        backgroundColor: AppPallete.primaryColor,
+        child: const Icon(Icons.add, color: Colors.black),
+      ),
+      body: ListView(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const Spacer(),
-            
-            // Timer Display
-            GestureDetector(
-              onTap: vm.toggleWorkout,
+        children: [
+          const SizedBox(height: 20),
+          
+          // Timer Display
+          GestureDetector(
+            onTap: vm.toggleWorkout,
+            child: Center(
               child: Container(
-                width: 300,
-                height: 300,
+                width: 250,
+                height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -67,7 +73,7 @@ class _WorkoutBody extends StatelessWidget {
                   children: [
                     Text(
                       _formatTime(vm.seconds),
-                      style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                      style: const TextStyle(fontSize: 54, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
                     ),
                     Text(
                       vm.isWorkingOut ? "PAUSE" : "START",
@@ -77,57 +83,129 @@ class _WorkoutBody extends StatelessWidget {
                 ),
               ),
             ),
+          ),
 
-            const SizedBox(height: 30),
+          const SizedBox(height: 30),
 
-            // GPS Stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem("DISTANCE", "${vm.totalDistance.toStringAsFixed(2)} km"),
-                _buildStatItem("PACE", "${vm.currentPace} min/km"),
-              ],
-            ),
-            
-            const Spacer(),
-            
-            // Spotify Controls
-            GlassActionCard(
+          // GPS Stats
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem("DISTANCE", "${vm.totalDistance.toStringAsFixed(2)} km"),
+              _buildStatItem("PACE", "${vm.currentPace} min/km"),
+            ],
+          ),
+          
+          const SizedBox(height: 30),
+          
+          // SESSION LOG
+          if (vm.exercises.isNotEmpty) ...[
+            const Text("SESSION LOG", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            const SizedBox(height: 10),
+            ...vm.exercises.map((exercise) => GlassActionCard(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.music_note, color: AppPallete.primaryColor),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          vm.currentTrack,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  Text(exercise.name.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Divider(color: Colors.white24),
+                  ...exercise.sets.asMap().entries.map((entry) {
+                    final setIndex = entry.key + 1;
+                    final s = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("SET $setIndex", style: const TextStyle(color: Colors.grey)),
+                          Text("${s.weight}kg x ${s.reps}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(onPressed: vm.connectSpotify, icon: const Icon(Icons.link)),
-                      IconButton(onPressed: vm.skipPrevious, icon: const Icon(Icons.skip_previous)),
-                      IconButton(
-                        onPressed: vm.isPaused ? vm.play : vm.pause,
-                        icon: Icon(vm.isPaused ? Icons.play_circle_fill : Icons.pause_circle_filled, size: 48, color: AppPallete.primaryColor),
-                      ),
-                      IconButton(onPressed: vm.skipNext, icon: const Icon(Icons.skip_next)),
-                    ],
-                  )
+                    );
+                  }),
                 ],
               ),
+            )),
+            const SizedBox(height: 30),
+          ],
+          
+          // Spotify Controls
+          GlassActionCard(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.music_note, color: AppPallete.primaryColor),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        vm.currentTrack,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(onPressed: vm.connectSpotify, icon: const Icon(Icons.link)),
+                    IconButton(onPressed: vm.skipPrevious, icon: const Icon(Icons.skip_previous)),
+                    IconButton(
+                      onPressed: vm.isPaused ? vm.play : vm.pause,
+                      icon: Icon(vm.isPaused ? Icons.play_circle_fill : Icons.pause_circle_filled, size: 48, color: AppPallete.primaryColor),
+                    ),
+                    IconButton(onPressed: vm.skipNext, icon: const Icon(Icons.skip_next)),
+                  ],
+                )
+              ],
             ),
-            
-            const SizedBox(height: 20),
+          ),
+          
+          const SizedBox(height: 80), // Space for FAB
+        ],
+      ),
+    );
+  }
+
+  void _showAddSetDialog(BuildContext context, WorkoutViewModel vm) {
+    final nameController = TextEditingController();
+    final repsController = TextEditingController();
+    final weightController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("LOG SET"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Exercise Name (e.g. Bench)")),
+            Row(
+              children: [
+                Expanded(child: TextField(controller: repsController, decoration: const InputDecoration(labelText: "Reps"), keyboardType: TextInputType.number)),
+                const SizedBox(width: 10),
+                Expanded(child: TextField(controller: weightController, decoration: const InputDecoration(labelText: "Weight (kg)"), keyboardType: TextInputType.number)),
+              ],
+            ),
           ],
         ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL")),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty && repsController.text.isNotEmpty) {
+                 vm.logSet(
+                   nameController.text.toUpperCase(), 
+                   int.tryParse(repsController.text) ?? 0, 
+                   double.tryParse(weightController.text) ?? 0.0
+                 );
+                 Navigator.pop(ctx);
+              }
+            },
+            child: const Text("SAVE"),
+          ),
+        ],
       ),
     );
   }

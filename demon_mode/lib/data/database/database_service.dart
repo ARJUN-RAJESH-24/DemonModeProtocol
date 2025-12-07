@@ -22,17 +22,32 @@ class DatabaseService {
     final path = join(dbPath, filePath);
     final password = await _getEncryptionKey();
 
-    return await openDatabase(
-      path,
-      version: 1,
-      password: password,
-      onCreate: _createDB,
-      onOpen: (db) async {
-         try {
-           await db.execute("ALTER TABLE daily_logs ADD COLUMN notes TEXT");
-         } catch (_) { }
-      }
-    );
+    try {
+      return await openDatabase(
+        path,
+        version: 2,
+        password: password,
+        onCreate: _createDB,
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            try {
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN custom_habits TEXT");
+            } catch (_) {}
+          }
+        },
+      );
+    } catch (e) {
+      // If DB is corrupted or password wrong, delete and recreate
+      print("Database corruption detected ($e). Deleting and recreating...");
+      await deleteDatabase(path);
+      return await openDatabase(
+        path,
+        version: 2,
+        password: password,
+        onCreate: _createDB,
+        onUpgrade: (_, __, ___) {},
+      );
+    }
   }
 
   Future<String> _getEncryptionKey() async {
@@ -61,6 +76,7 @@ class DatabaseService {
         mood $textType,
         photo_paths $textType,
         notes TEXT,
+        custom_habits TEXT,
         updated_at $textType
       )
     ''');
