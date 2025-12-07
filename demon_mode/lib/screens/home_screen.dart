@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'daily_log_screen.dart';
 
 class HomeScreen extends StatelessWidget{
-    Const HomeScreen({super.key});
+    const HomeScreen({super.key});
 
     @override
     Widget build(BuildContext context){
       return Scaffold(
         appBar: AppBar(
           title : const Text('Demon Mode Protocol'),
-          centerTitle: true;
+          centerTitle: true,
         ),
         body : Center(
           child:ElevatedButton(

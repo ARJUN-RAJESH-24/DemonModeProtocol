@@ -1,33 +1,96 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'package:provider/provider.dart';
+import 'core/theme/demon_theme.dart';
+import 'features/dashboard/dashboard_screen.dart';
+import 'features/daily_log/daily_log_screen.dart';
+import 'features/workout/workout_screen.dart';
+import 'features/splash/splash_screen.dart';
+import 'features/devices/devices_screen.dart';
+import 'features/dashboard/dashboard_view_model.dart';
+import 'features/daily_log/daily_log_view_model.dart';
+import 'features/workout/workout_view_model.dart';
+import 'features/devices/devices_view_model.dart';
 
-void main(){
-    runApp(const DemonModeApp());
-
+void main() {
+  runApp(const DemonModeApp());
 }
 
-class DemonModeApp extends StatelessWidget{
-    const DemonModeApp({super.key});
+class DemonModeApp extends StatelessWidget {
+  const DemonModeApp({super.key});
 
-    @override
-    Widget build(BuildContext context){
-    return MaterialApp(
-        title : 'Demon Mode Protocol',
-        theme : ThemeData.dark().copyWith(
-            primaryColor : Colors.red,
-            scaffoldBackgroundColor:Colors.black,
-            appBarTheme: const AppBarTheme(
-                backgroundColor : Colors.black ,
-                foregroundColor : Colors.red,
-            ),
-            elevatedButtonTheme:ElevatedButtonThemeData(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor : Colors.red,
-                    foregroundColor : Colors.black,
-                ),
-            ),
-        ),
-        home: const HomeScreen(),
-        );
-    }
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => DashboardViewModel()),
+        ChangeNotifierProvider(create: (_) => DailyLogViewModel()),
+        ChangeNotifierProvider(create: (_) => WorkoutViewModel()),
+        ChangeNotifierProvider(create: (_) => DevicesViewModel()),
+      ],
+      child: MaterialApp(
+        title: 'Demon Mode Protocol',
+        debugShowCheckedModeBanner: false,
+        theme: DemonTheme.darkThemeMode,
+        home: const SplashScreen(),
+      ),
+    );
+  }
+}
+
+class MainNavigationWrapper extends StatefulWidget {
+  const MainNavigationWrapper({super.key});
+
+  @override
+  State<MainNavigationWrapper> createState() => _MainNavigationWrapperState();
+}
+
+class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const DashboardScreen(),
+    const DailyLogScreen(),
+    const WorkoutScreen(),
+    const DevicesScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.edit_note_outlined),
+            selectedIcon: Icon(Icons.edit_note),
+            label: 'Log',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.fitness_center_outlined),
+            selectedIcon: Icon(Icons.fitness_center),
+            label: 'Workout',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.watch_outlined),
+            selectedIcon: Icon(Icons.watch),
+            label: 'Devices',
+          ),
+        ],
+      ),
+    );
+  }
 }
