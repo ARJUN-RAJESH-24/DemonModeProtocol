@@ -158,6 +158,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             
             const SizedBox(height: 16),
+            
+            // Steps Card
+            GlassActionCard(
+               child: Padding(
+                 padding: const EdgeInsets.all(16),
+                 child: Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                   children: [
+                     Row(
+                       children: [
+                         Container(
+                           padding: const EdgeInsets.all(10),
+                           decoration: BoxDecoration(color: AppPallete.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                           child: const Icon(Icons.directions_walk, color: AppPallete.primaryColor, size: 24),
+                         ),
+                         const SizedBox(width: 15),
+                         Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             const Text("STEPS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey, letterSpacing: 1.5)),
+                             Text("${vm.steps}", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                           ],
+                         ),
+                       ],
+                     ),
+                     Column(
+                       crossAxisAlignment: CrossAxisAlignment.end,
+                       children: [
+                         SizedBox(
+                           height: 40,
+                           width: 40,
+                           child: CircularProgressIndicator(
+                             value: (vm.steps / 10000).clamp(0.0, 1.0),
+                             backgroundColor: Colors.white10,
+                             color: AppPallete.primaryColor,
+                           ),
+                         ),
+                         const SizedBox(height: 4),
+                         const Text("10k Goal", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                       ],
+                     )
+                   ],
+                 ),
+               ),
+            ),
 
             // Nutrition Summary (Calories In vs Out)
             GlassActionCard(

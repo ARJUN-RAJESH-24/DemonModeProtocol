@@ -25,7 +25,7 @@ class DatabaseService {
     try {
       return await openDatabase(
         path,
-        version: 6,
+        version: 7,
         password: password,
         onCreate: _createDB,
         onUpgrade: (db, oldVersion, newVersion) async {
@@ -57,6 +57,11 @@ class DatabaseService {
               await db.execute("ALTER TABLE daily_logs ADD COLUMN supplements TEXT");
             } catch (_) {}
           }
+           if (oldVersion < 7) {
+             try {
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN steps INTEGER DEFAULT 0");
+            } catch (_) {}
+          }
         },
       );
     } catch (e) {
@@ -65,7 +70,7 @@ class DatabaseService {
       await deleteDatabase(path);
       return await openDatabase(
         path,
-        version: 6,
+        version: 7,
         password: password,
         onCreate: _createDB,
         onUpgrade: (_, __, ___) {},
@@ -107,6 +112,7 @@ class DatabaseService {
         workout_details TEXT,
         sleep_hours REAL DEFAULT 0,
         demon_score REAL DEFAULT 0,
+        steps INTEGER DEFAULT 0,
         updated_at $textType
       )
     ''');

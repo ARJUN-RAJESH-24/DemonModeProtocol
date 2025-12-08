@@ -17,6 +17,7 @@ class DailyLogModel {
   final List<WorkoutSession> workouts;
   final double sleepHours;
   final double demonScore;
+  final int steps;
 
   DailyLogModel({
     this.id,
@@ -34,6 +35,7 @@ class DailyLogModel {
     this.workouts = const [],
     this.sleepHours = 0.0,
     this.demonScore = 0.0,
+    this.steps = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -53,6 +55,7 @@ class DailyLogModel {
       'workout_details': jsonEncode(workouts.map((e) => e.toJson()).toList()),
       'sleep_hours': sleepHours,
       'demon_score': demonScore,
+      'steps': steps,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -76,6 +79,7 @@ class DailyLogModel {
           .toList(),
       sleepHours: (json['sleep_hours'] as num?)?.toDouble() ?? 0.0,
       demonScore: (json['demon_score'] as num?)?.toDouble() ?? 0.0,
+      steps: json['steps'] ?? 0,
     );
   }
 
@@ -95,6 +99,7 @@ class DailyLogModel {
     List<WorkoutSession>? workouts,
     double? sleepHours,
     double? demonScore,
+    int? steps,
   }) {
     return DailyLogModel(
       id: id ?? this.id,
@@ -112,6 +117,7 @@ class DailyLogModel {
       workouts: workouts ?? this.workouts,
       sleepHours: sleepHours ?? this.sleepHours,
       demonScore: demonScore ?? this.demonScore,
+      steps: steps ?? this.steps,
     );
   }
 }
