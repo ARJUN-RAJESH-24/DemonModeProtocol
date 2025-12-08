@@ -24,8 +24,44 @@ class _SettingsBody extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-
-
+          
+          // Profile Section
+          const Text("DEMON PROFILE", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Card(
+            color: AppPallete.surfaceColor,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                   Row(
+                     children: [
+                       Expanded(child: _ProfileInput("Age", vm.age?.toString(), (v) => vm.updateProfile(a: int.tryParse(v)))),
+                       const SizedBox(width: 10),
+                       Expanded(child: _ProfileInput("Height (cm)", vm.height?.toString(), (v) => vm.updateProfile(h: double.tryParse(v)))),
+                       const SizedBox(width: 10),
+                       Expanded(child: _ProfileInput("Weight (kg)", vm.weight?.toString(), (v) => vm.updateProfile(w: double.tryParse(v)))),
+                     ],
+                   ),
+                   const SizedBox(height: 20),
+                   DropdownButtonFormField<String>(
+                     value: vm.goal,
+                     dropdownColor: Colors.grey[900],
+                     decoration: const InputDecoration(labelText: "Current Protocol", border: OutlineInputBorder()),
+                     items: const [
+                       DropdownMenuItem(value: 'cut', child: Text("CUT (Deficit)")),
+                       DropdownMenuItem(value: 'maintain', child: Text("MAINTAIN")),
+                       DropdownMenuItem(value: 'bulk', child: Text("BULK (Surplus)")),
+                     ],
+                     onChanged: (val) => vm.updateProfile(g: val),
+                   ),
+                   const SizedBox(height: 10),
+                   if (vm.tdee != null)
+                     Text("Target: ${vm.tdee!.toInt()} kcal", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent))
+                ],
+              ),
+            ),
+          ),
           
           const SizedBox(height: 20),
           const Text("CUSTOMIZATIONS", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
@@ -77,6 +113,18 @@ class _SettingsBody extends StatelessWidget {
           const SizedBox(height: 20),
           const Text("DATA", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
           ListTile(
+            title: const Text("Export Data"),
+            subtitle: const Text("Save logs to CSV/JSON"),
+            trailing: const Icon(Icons.upload_file, color: Colors.blue),
+            onTap: () => vm.exportData(),
+          ),
+          ListTile(
+            title: const Text("Import Data"),
+            subtitle: const Text("Restore logs from backup"),
+            trailing: const Icon(Icons.download, color: Colors.green),
+            onTap: () => vm.importData(),
+          ),
+          ListTile(
             title: const Text("Clear All Data"),
             subtitle: const Text("Permanently delete logs & workouts"),
             trailing: const Icon(Icons.delete_forever, color: Colors.red),
@@ -110,6 +158,19 @@ class _SettingsBody extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _ProfileInput(String label, String? val, Function(String) onChanged) {
+    return TextFormField(
+      initialValue: val,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      ),
+      onChanged: onChanged,
     );
   }
 }

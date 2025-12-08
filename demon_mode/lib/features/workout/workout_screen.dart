@@ -5,6 +5,7 @@ import '../../core/theme/app_pallete.dart';
 import 'workout_view_model.dart';
 import '../daily_log/widgets/glass_action_card.dart';
 import '../../data/models/workout_model.dart';
+import '../devices/devices_screen.dart';
 
 class WorkoutScreen extends StatelessWidget {
   const WorkoutScreen({super.key});
@@ -19,150 +20,149 @@ class _WorkoutBody extends StatelessWidget {
   const _WorkoutBody();
 
   String _formatTime(int seconds) {
-    final m = (seconds / 60).floor().toString().padLeft(2, '0');
+    final h = (seconds / 3600).floor().toString().padLeft(2, '0');
+    final m = ((seconds % 3600) / 60).floor().toString().padLeft(2, '0');
     final s = (seconds % 60).toString().padLeft(2, '0');
-    return "$m:$s";
-  }
-
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12, letterSpacing: 1.5)),
-      ],
-    );
+    return h == "00" ? "$m:$s" : "$h:$m:$s";
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<WorkoutViewModel>();
+    // Simple Calorie Estimate: 5 kcal/min for now
+    final calories = (vm.seconds / 60 * 5).toInt();
+    // Demon Points: 1 pt per 10 mins
+    final demonPts = (vm.seconds / 600).toInt();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('DEMON MODE // TRAIN')),
+      appBar: AppBar(
+        title: const Text('DEMON MODE // TRAIN'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bluetooth_audio),
+            onPressed: () {
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Checking Bluetooth State...")));
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const DevicesScreen()));
+            },
+          )
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSetDialog(context, vm),
         backgroundColor: AppPallete.primaryColor,
         child: const Icon(Icons.add, color: Colors.black),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(24.0),
+      body: Column(
         children: [
-          const SizedBox(height: 20),
-          
-          // Timer Display
-          GestureDetector(
-            onTap: vm.toggleWorkout,
-            child: Center(
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.grey,
-                    width: 4,
-                  ),
-                  boxShadow: [
-                    if (vm.isWorkingOut)
-                      BoxShadow(color: AppPallete.primaryColor.withOpacity(0.5), blurRadius: 30)
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+           // Top Area: Timer & Main Stat
+           Expanded(
+             flex: 2,
+             child: Container(
+               alignment: Alignment.center,
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
                     Text(
                       _formatTime(vm.seconds),
-                      style: const TextStyle(fontSize: 54, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                      style: const TextStyle(fontSize: 80, fontWeight: FontWeight.bold, fontFamily: 'monospace', letterSpacing: -2),
                     ),
-                    Text(
-                      vm.isWorkingOut ? "PAUSE" : "START",
-                      style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
+                    const Text("DURATION", style: TextStyle(color: Colors.grey, letterSpacing: 2)),
+                 ],
+               ),
+             ),
+           ),
 
-          const SizedBox(height: 30),
+           // Stats Grid (Google Fit Style)
+           Expanded(
+             flex: 3,
+             child: Container(
+               padding: const EdgeInsets.symmetric(horizontal: 20),
+               child: GridView.count(
+                 crossAxisCount: 2,
+                 childAspectRatio: 1.5,
+                 crossAxisSpacing: 15,
+                 mainAxisSpacing: 15,
+                 children: [
+                   _MetricCard(label: "DISTANCE", value: "${vm.totalDistance.toStringAsFixed(2)}", unit: "km", icon: Icons.map),
+                   _MetricCard(label: "ENERGY", value: "$calories", unit: "kcal", icon: Icons.local_fire_department),
+                   _MetricCard(label: "PACE", value: vm.currentPace, unit: "min/km", icon: Icons.speed),
+                   _MetricCard(label: "DEMON PTS", value: "$demonPts", unit: "pts", icon: Icons.bolt),
+                 ],
+               ),
+             ),
+           ),
 
-          // GPS Stats
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem("DISTANCE", "${vm.totalDistance.toStringAsFixed(2)} km"),
-              _buildStatItem("PACE", "${vm.currentPace} min/km"),
-            ],
-          ),
-          
-          const SizedBox(height: 30),
-          
-          // SESSION LOG
-          if (vm.exercises.isNotEmpty) ...[
-            const Text("SESSION LOG", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-            const SizedBox(height: 10),
-            ...vm.exercises.map((exercise) => GlassActionCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(exercise.name.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const Divider(color: Colors.white24),
-                  ...exercise.sets.asMap().entries.map((entry) {
-                    final setIndex = entry.key + 1;
-                    final s = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("SET $setIndex", style: const TextStyle(color: Colors.grey)),
-                          Text("${s.weight}kg x ${s.reps}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            )),
-            const SizedBox(height: 30),
-          ],
-          
-          // Spotify Controls
-          GlassActionCard(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.music_note, color: AppPallete.primaryColor),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        vm.currentTrack,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(onPressed: vm.connectSpotify, icon: const Icon(Icons.link)),
-                    IconButton(onPressed: vm.skipPrevious, icon: const Icon(Icons.skip_previous)),
-                    IconButton(
-                      onPressed: vm.isPaused ? vm.play : vm.pause,
-                      icon: Icon(vm.isPaused ? Icons.play_circle_fill : Icons.pause_circle_filled, size: 48, color: AppPallete.primaryColor),
-                    ),
-                    IconButton(onPressed: vm.skipNext, icon: const Icon(Icons.skip_next)),
-                  ],
-                )
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 80), // Space for FAB
+           // Logs & Controls
+           Expanded(
+             flex: 3,
+             child: Container(
+               padding: const EdgeInsets.all(20),
+               decoration: const BoxDecoration(
+                 color: AppPallete.surfaceColor,
+                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+               ),
+               child: Column(
+                 children: [
+                   // Set Logs Preview (Last 2)
+                   if (vm.exercises.isNotEmpty)
+                     Expanded(
+                       child: ListView(
+                         children: vm.exercises.map((e) => ListTile(
+                           title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                           subtitle: Text("${e.sets.length} Sets Completed"),
+                           trailing: Text("${e.sets.last.weight}kg x ${e.sets.last.reps}"),
+                         )).toList(),
+                       ),
+                     )
+                   else 
+                     const Expanded(child: Center(child: Text("NO SETS LOGGED", style: TextStyle(color: Colors.grey)))),
+
+                   // Controls
+                   const SizedBox(height: 10),
+                   Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _ControlButton(
+                          icon: Icons.stop, 
+                          label: "STOP", 
+                          color: Colors.red[900]!, 
+                          onTap: vm.toggleWorkout // Handles stop logic if paused? No, toggle pauses. We need Stop.
+                          // VM has _stopWorkout. Exposed? 
+                          // toggleWorkout call: if workingOut -> _stopWorkout(). No, it toggles _isWorkingOut and cancels timer.
+                          // Wait, looking at VM: toggleWorkout() -> if _isWorkingOut -> _stopWorkout().
+                          // Correct.
+                        ),
+                        // Play/Pause
+                        GestureDetector(
+                          onTap: vm.toggleWorkout,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppPallete.primaryColor,
+                              shape: BoxShape.circle,
+                              boxShadow: const [BoxShadow(color: AppPallete.primaryColor, blurRadius: 20, spreadRadius: -5)]
+                            ),
+                            child: Icon(
+                              vm.isWorkingOut ? Icons.pause : Icons.play_arrow, 
+                              size: 40, 
+                              color: Colors.black
+                            ),
+                          ),
+                        ),
+                         _ControlButton(
+                          icon: Icons.music_note, 
+                          label: "MUSIC", 
+                          color: Colors.blueGrey, 
+                          onTap: vm.connectSpotify
+                        ),
+                      ],
+                   )
+                 ],
+               ),
+             ),
+           )
         ],
       ),
     );
@@ -205,6 +205,63 @@ class _WorkoutBody extends StatelessWidget {
             },
             child: const Text("SAVE"),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final String unit;
+  final IconData icon;
+
+  const _MetricCard({required this.label, required this.value, required this.unit, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: AppPallete.primaryColor),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              Text("$unit $label", style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class _ControlButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ControlButton({required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(radius: 24, backgroundColor: color.withOpacity(0.2), child: Icon(icon, color: color)),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold))
         ],
       ),
     );

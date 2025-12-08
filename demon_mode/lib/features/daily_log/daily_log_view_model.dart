@@ -52,11 +52,46 @@ class DailyLogViewModel extends ChangeNotifier {
     await _save();
   }
 
+  Future<void> updateSleep(double hours) async {
+    if (_currentLog == null) return;
+    _currentLog = _currentLog!.copyWith(sleepHours: hours);
+    await _calculateAndSaveScore();
+  }
+
   Future<void> toggleCustomHabit(String habit, bool value) async {
     if (_currentLog == null) return;
     final newHabits = Map<String, bool>.from(_currentLog!.customHabits);
     newHabits[habit] = value;
     _currentLog = _currentLog!.copyWith(customHabits: newHabits);
+    await _calculateAndSaveScore();
+  }
+
+  Future<void> _calculateAndSaveScore() async {
+    if (_currentLog == null) return;
+    
+    // Default habits count + custom habits + sleep check
+    // Assuming we sync habits from PreferencesRepository eventually, but for now using keys in map
+    // The map in _currentLog ONLY has checked/unchecked state for habits that have been toggled? 
+    // Or does it contain all?
+    // The DemonHabitsScreen has the authority on "All Habits".
+    // We should probably rely on the screen to pass the "Total Count" or have a robust way to know total habits.
+    // For now, let's just count (True habits / Total Keys in Map) + Sleep Bonus?
+    // Actually, to be accurate, we need the total list of habits to know the denominator.
+    // But since the View Model doesn't easily access the "Settings" habits without injection,
+    // we will assume the map contains all relevant habits for the day once initialized.
+    
+    int completed = _currentLog!.customHabits.values.where((e) => e).length;
+    int total = _currentLog!.customHabits.length;
+    
+    // Add Sleep
+    if (_currentLog!.sleepHours >= 7) {
+      completed++;
+    }
+    total++; // Sleep is a habit
+
+    double score = total > 0 ? (completed / total) * 10 : 0;
+    
+    _currentLog = _currentLog!.copyWith(demonScore: score);
     notifyListeners();
     await _save();
   }

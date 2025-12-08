@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'workout_model.dart';
 
 class DailyLogModel {
   final int? id;
@@ -9,6 +10,9 @@ class DailyLogModel {
   final List<String> photoPaths;
   final String? notes; // Zen Mode thoughts
   final Map<String, bool> customHabits;
+  final List<WorkoutSession> workouts;
+  final double sleepHours;
+  final double demonScore;
 
   DailyLogModel({
     this.id,
@@ -19,6 +23,9 @@ class DailyLogModel {
     this.photoPaths = const [],
     this.notes,
     this.customHabits = const {},
+    this.workouts = const [],
+    this.sleepHours = 0.0,
+    this.demonScore = 0.0,
   });
 
   Map<String, dynamic> toJson() {
@@ -31,6 +38,9 @@ class DailyLogModel {
       'photo_paths': jsonEncode(photoPaths),
       'notes': notes,
       'custom_habits': jsonEncode(customHabits),
+      'workout_details': jsonEncode(workouts.map((e) => e.toJson()).toList()),
+      'sleep_hours': sleepHours,
+      'demon_score': demonScore,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -45,6 +55,11 @@ class DailyLogModel {
       photoPaths: List<String>.from(jsonDecode(json['photo_paths'] ?? '[]')),
       notes: json['notes'],
       customHabits: Map<String, bool>.from(jsonDecode(json['custom_habits'] ?? '{}')),
+      workouts: (jsonDecode(json['workout_details'] ?? '[]') as List)
+          .map((e) => WorkoutSession.fromJson(e))
+          .toList(),
+      sleepHours: (json['sleep_hours'] as num?)?.toDouble() ?? 0.0,
+      demonScore: (json['demon_score'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -57,6 +72,9 @@ class DailyLogModel {
     List<String>? photoPaths,
     String? notes,
     Map<String, bool>? customHabits,
+    List<WorkoutSession>? workouts,
+    double? sleepHours,
+    double? demonScore,
   }) {
     return DailyLogModel(
       id: id ?? this.id,
@@ -67,6 +85,9 @@ class DailyLogModel {
       photoPaths: photoPaths ?? this.photoPaths,
       notes: notes ?? this.notes,
       customHabits: customHabits ?? this.customHabits,
+      workouts: workouts ?? this.workouts,
+      sleepHours: sleepHours ?? this.sleepHours,
+      demonScore: demonScore ?? this.demonScore,
     );
   }
 }

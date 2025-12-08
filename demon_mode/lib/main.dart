@@ -11,6 +11,9 @@ import 'features/daily_log/daily_log_view_model.dart';
 import 'features/workout/workout_view_model.dart';
 import 'features/devices/devices_view_model.dart';
 import 'features/settings/settings_view_model.dart';
+import 'features/nutrition/nutrition_view_model.dart';
+import 'features/body_metrics/body_metrics_view_model.dart';
+import 'features/expert_hub/expert_hub_screen.dart';
 
 void main() {
   runApp(const DemonModeApp());
@@ -28,6 +31,8 @@ class DemonModeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => WorkoutViewModel()),
         ChangeNotifierProvider(create: (_) => DevicesViewModel()),
         ChangeNotifierProvider(create: (_) => SettingsViewModel()..init()),
+        ChangeNotifierProvider(create: (_) => NutritionViewModel()),
+        ChangeNotifierProvider(create: (_) => BodyMetricsViewModel()),
       ],
       child: MaterialApp(
         title: 'Demon Mode Protocol',
@@ -53,7 +58,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     const DashboardScreen(),
     const DailyLogScreen(),
     const WorkoutScreen(),
-    const DevicesScreen(),
+    const ExpertHubScreen(),
   ];
 
   @override
@@ -87,9 +92,9 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
             label: 'Workout',
           ),
           NavigationDestination(
-            icon: Icon(Icons.watch_outlined),
-            selectedIcon: Icon(Icons.watch),
-            label: 'Devices',
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: 'Expert Hub',
           ),
         ],
       ),

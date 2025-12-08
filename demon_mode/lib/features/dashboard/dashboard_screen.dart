@@ -8,6 +8,11 @@ import 'dashboard_view_model.dart';
 import '../settings/settings_screen.dart';
 import '../zen_mode/zen_mode_screen.dart';
 import '../daily_log/widgets/glass_action_card.dart';
+import '../daily_log/daily_log_view_model.dart';
+import '../nutrition/nutrition_screen.dart';
+import '../expert_hub/expert_hub_screen.dart';
+import '../body_metrics/body_metrics_screen.dart';
+import '../daily_log/demon_habits_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +27,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().init();
+      // Ensure daily log is fresh
+      context.read<DailyLogViewModel>().loadLog(DateTime.now());
     });
   }
 
@@ -48,19 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                Navigator.push(context, MaterialPageRoute(builder: (_) => const ZenModeScreen()));
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () async {
-              final repo = DailyLogRepository();
-              final logs = await repo.getAllLogs();
-              debugPrint("Exporting ${logs.length} logs...");
-              if (context.mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Exported ${logs.length} logs (Mock)")),
-                );
-              }
-            },
-          )
+
         ],
       ),
       body: SingleChildScrollView(
@@ -117,54 +112,157 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
+
+            // Feature Grid
+            GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _FeatureCard(
+                  icon: Icons.restaurant,
+                  title: "NUTRITION",
+                  color: Colors.green,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NutritionScreen())),
+                ),
+                 _FeatureCard(
+                  icon: Icons.school,
+                  title: "EXPERT HUB",
+                  color: Colors.redAccent,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertHubScreen())),
+                ),
+                _FeatureCard(
+                  icon: Icons.accessibility_new,
+                  title: "BODY METRICS",
+                  color: Colors.purple,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen())),
+                ),
+                 _FeatureCard(
+                  icon: Icons.bolt,
+                  title: "DEMON SCORE",
+                  value: vm.todayLog?.demonScore.toStringAsFixed(1),
+                  color: Colors.orange,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DemonHabitsScreen())),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             
-            // Weekly Chart
-            const Align(
+            // Weekly Consistency
+             const Align(
               alignment: Alignment.centerLeft,
               child: Text("WEEKLY CONSISTENCY", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             ),
             const SizedBox(height: 10),
             SizedBox(
               height: 200,
-              child: BarChart(
-                BarChartData(
+              child: LineChart(
+                LineChartData(
                   gridData: const FlGridData(show: false),
-                  titlesData: FlTitlesData(
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= 0 && value.toInt() < vm.weeklyLogs.length) {
-                             return Text(
-                               ['S','M','T','W','T','F','S'][DateTime.now().subtract(Duration(days: 6 - value.toInt())).weekday % 7],
-                               style: const TextStyle(color: Colors.grey),
-                             );
-                          }
-                          return const Text('');
-                        },
-                      ),
+                  titlesData: const FlTitlesData(show: false),
+                   borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: vm.weeklyLogs.asMap().entries.map((e) {
+                        return FlSpot(e.key.toDouble(), e.value.workoutDone ? 1 : 0);
+                      }).toList(),
+                      isCurved: true,
+                      color: AppPallete.primaryColor,
+                      barWidth: 4,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(show: true, color: AppPallete.primaryColor.withOpacity(0.1)),
                     ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: vm.weeklyLogs.asMap().entries.map((e) {
-                    return BarChartGroupData(
-                      x: e.key,
-                      barRods: [
-                        BarChartRodData(
-                          toY: e.value.workoutDone ? 1 : 0.2, // 1 for workout, 0.2 for miss
-                          color: e.value.workoutDone ? AppPallete.primaryColor : AppPallete.surfaceColor,
-                          width: 16,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                  ],
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppPallete.primaryColor,
+        child: const Icon(Icons.add, color: Colors.black),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context, 
+            backgroundColor: AppPallete.surfaceColor,
+            builder: (ctx) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.local_drink, color: Colors.blue),
+                  title: const Text("Log Water (+250ml)"),
+                  onTap: () {
+                    context.read<DailyLogViewModel>().updateWater(250);
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Water Logged")));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.monitor_weight, color: Colors.purple),
+                  title: const Text("Log Weight"),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen()));
+                  },
+                ),
+                 ListTile(
+                  leading: const Icon(Icons.mood, color: Colors.yellow),
+                  title: const Text("Log Mood"),
+                  onTap: () {
+                    // Quick Mood logic or nav? Let's just nav to Daily Log for full details
+                    // Or keep it simple for now
+                     Navigator.pop(ctx);
+                     // Navigator.push... 
+                     // Since DailyLogScreen is complex, let's just hint functionality
+                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mood logging coming to Quick Actions soon.")));
+                  },
+                ),
+              ],
+            )
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? value;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _FeatureCard({required this.icon, required this.title, this.value, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppPallete.surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 40, color: color),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1)),
+            if (value != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(value!, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
+              )
           ],
         ),
       ),

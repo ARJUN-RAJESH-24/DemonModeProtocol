@@ -6,6 +6,8 @@ import '../../core/theme/app_pallete.dart';
 import 'daily_log_view_model.dart';
 import 'widgets/glass_action_card.dart';
 import '../settings/settings_view_model.dart';
+import '../nutrition/nutrition_view_model.dart';
+import '../workout/workout_view_model.dart';
 
 class DailyLogScreen extends StatefulWidget {
   const DailyLogScreen({super.key});
@@ -142,6 +144,87 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 ),
               )),
             ],
+
+            const SizedBox(height: 20),
+
+             // NUTRITION INTEGRATION
+             Consumer<NutritionViewModel>(
+                builder: (context, nvm, _) {
+                   return Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       _buildSectionHeader("Fuel & Nutrition"),
+                       GlassActionCard(
+                         child: Column(
+                           children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("${nvm.totalKCal.toInt()} / ${nvm.targetKCal.toInt()} kcal", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text("${(nvm.totalKCal / nvm.targetKCal * 100).clamp(0, 100).toStringAsFixed(0)}%", style: const TextStyle(color: AppPallete.primaryColor)),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              LinearProgressIndicator(
+                                value: (nvm.totalKCal / (nvm.targetKCal == 0 ? 1 : nvm.targetKCal)).clamp(0.0, 1.0),
+                                color: AppPallete.primaryColor,
+                                backgroundColor: Colors.white10,
+                              ),
+                              const SizedBox(height: 10),
+                              if (nvm.todayLogs.isEmpty)
+                                const Text("No meals logged yet.", style: TextStyle(color: Colors.grey, fontSize: 12))
+                              else
+                                ...nvm.todayLogs.take(3).map((e) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  child: Row(
+                                    children: [
+                                      Expanded(child: Text("${e.mealType}: ${e.food?.name ?? 'Unknown'}", style: const TextStyle(fontSize: 12))),
+                                      Text("${e.totalKCal.toInt()} kcal", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ))
+                           ],
+                         ),
+                       ),
+                     ],
+                   );
+                },
+             ),
+
+            const SizedBox(height: 20),
+
+            // WORKOUT INTEGRATION
+            Consumer<WorkoutViewModel>(
+              builder: (context, wvm, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader("Live Session"),
+                    GlassActionCard(
+                      child: wvm.exercises.isEmpty 
+                        ? const Text("No active workout session.", style: TextStyle(color: Colors.grey))
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Active Session • ${wvm.exercises.length} Exercises", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                              const Divider(color: Colors.white10),
+                              ...wvm.exercises.map((e) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text("${e.sets.length} sets", style: const TextStyle(color: Colors.grey)),
+                                  ],
+                                ),
+                              ))
+                            ],
+                          ),
+                    ),
+                  ],
+                );
+              },
+            ),
 
              const SizedBox(height: 20),
 

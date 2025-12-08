@@ -25,13 +25,28 @@ class DatabaseService {
     try {
       return await openDatabase(
         path,
-        version: 2,
+        version: 5,
         password: password,
         onCreate: _createDB,
         onUpgrade: (db, oldVersion, newVersion) async {
           if (oldVersion < 2) {
             try {
               await db.execute("ALTER TABLE daily_logs ADD COLUMN custom_habits TEXT");
+            } catch (_) {}
+          }
+          if (oldVersion < 3) {
+            // Version 3: Full V2.0 Schema
+            await _createV2Tables(db);
+          }
+          if (oldVersion < 4) {
+             try {
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN workout_details TEXT");
+            } catch (_) {}
+          }
+           if (oldVersion < 5) {
+             try {
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN sleep_hours REAL DEFAULT 0");
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN demon_score REAL DEFAULT 0");
             } catch (_) {}
           }
         },
@@ -42,7 +57,7 @@ class DatabaseService {
       await deleteDatabase(path);
       return await openDatabase(
         path,
-        version: 2,
+        version: 5,
         password: password,
         onCreate: _createDB,
         onUpgrade: (_, __, ___) {},
@@ -65,7 +80,7 @@ class DatabaseService {
     const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
     const textType = 'TEXT NOT NULL';
     const intType = 'INTEGER NOT NULL';
-    const blobType = 'BLOB'; // For small data or if needed later
+    const blobType = 'BLOB';
 
     await db.execute('''
       CREATE TABLE daily_logs (
@@ -77,11 +92,86 @@ class DatabaseService {
         photo_paths $textType,
         notes TEXT,
         custom_habits TEXT,
+        workout_details TEXT,
+        sleep_hours REAL DEFAULT 0,
+        demon_score REAL DEFAULT 0,
         updated_at $textType
       )
     ''');
     
-    // Future expansion: Workout details, etc.
+    await _createV2Tables(db);
+  }
+
+  Future<void> _createV2Tables(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const textNullable = 'TEXT';
+    const intType = 'INTEGER NOT NULL';
+    const realType = 'REAL NOT NULL';
+    const boolType = 'INTEGER NOT NULL DEFAULT 0'; // 0 or 1
+
+    // Nutrition
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS foods (
+        id $idType,
+        name $textType,
+        brand $textNullable,
+        kcal $realType,
+        protein $realType,
+        carbs $realType,
+        fats $realType,
+        fiber $realType,
+        sodium $realType,
+        serving_unit $textType,
+        serving_quantity $realType,
+        is_custom $boolType
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS meal_logs (
+        id $idType,
+        date $textType, -- YYYY-MM-DD
+        meal_type $textType, -- Breakfast, Lunch, Dinner, Snack
+        food_id $intType,
+        serving_multiplier $realType,
+        created_at $textType,
+        FOREIGN KEY(food_id) REFERENCES foods(id)
+      )
+    ''');
+
+    // Body Metrics
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS body_metrics (
+        id $idType,
+        date $textType,
+        weight $realType,
+        body_fat $realType,
+        waist $realType,
+        neck $realType,
+        chest $realType,
+        arms $realType,
+        legs $realType,
+        photo_path $textNullable
+      )
+    ''');
+
+    // Detailed Habits & Demon Score
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS user_habits (
+        id $idType,
+        date $textType,
+        no_sugar $boolType,
+        no_oil $boolType,
+        creatine $boolType,
+        chia_seeds $boolType,
+        morning_run $boolType,
+        evening_gym $boolType,
+        sleep_time $textNullable,
+        is_perfect_day $boolType,
+        demon_score $realType
+      )
+    ''');
   }
 
   Future<void> close() async {

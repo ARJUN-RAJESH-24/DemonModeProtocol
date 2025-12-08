@@ -6,7 +6,7 @@ class PreferencesRepository {
   
   Future<List<String>> getHabits() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_keyHabits) ?? ['Cold Plunge', 'Read 10 Pages', 'Creatine']; // Defaults
+    return prefs.getStringList(_keyHabits) ?? ['Cold Plunge', 'Read 10 Pages', 'Creatine', '10k Steps', 'Stretching', 'Zone 2 Cardio (45m)']; // Defaults
   }
 
   Future<void> addHabit(String habit) async {

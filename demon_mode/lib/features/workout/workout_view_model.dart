@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:spotify_sdk/models/player_state.dart' as spotify_player;
 import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/workout_model.dart';
+import '../../data/repositories/daily_log_repository.dart';
 
 class WorkoutViewModel extends ChangeNotifier {
   // Timer State
@@ -23,6 +26,12 @@ class WorkoutViewModel extends ChangeNotifier {
   String _currentTrack = "Not Connected";
   bool _isPaused = true;
 
+  // Workout Types
+  String _workoutType = 'Gym';
+  final List<String> workoutTypes = ['Gym', 'Run', 'Cycling', 'Calisthenics', 'Sports'];
+
+  String get workoutType => _workoutType;
+
   // Gym State
   List<WorkoutExercise> _exercises = [];
   int get seconds => _seconds;
@@ -33,8 +42,50 @@ class WorkoutViewModel extends ChangeNotifier {
   String get currentPace => _currentPace.toStringAsFixed(2);
   List<WorkoutExercise> get exercises => _exercises;
 
+  final DailyLogRepository _logRepo = DailyLogRepository();
+
+  WorkoutViewModel() {
+    _restoreState();
+  }
+
+  Future<void> _restoreState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? jsonStr = prefs.getString('current_workout_exercises');
+    
+    if (jsonStr != null) {
+      final List<dynamic> list = jsonDecode(jsonStr);
+      _exercises = list.map((e) => WorkoutExercise.fromJson(e)).toList();
+    }
+    
+    _isWorkingOut = prefs.getBool('current_workout_active') ?? false;
+    _seconds = prefs.getInt('current_workout_seconds') ?? 0;
+    _workoutType = prefs.getString('current_workout_type') ?? 'Gym';
+
+    if (_isWorkingOut) {
+      _startTimer();
+    }
+    notifyListeners();
+  }
+
+  Future<void> _saveState() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('current_workout_exercises', jsonEncode(_exercises.map((e) => e.toJson()).toList()));
+    prefs.setBool('current_workout_active', _isWorkingOut);
+    prefs.setInt('current_workout_seconds', _seconds);
+    prefs.setString('current_workout_type', _workoutType);
+  }
+
+  Future<void> _clearResultState() async {
+     final prefs = await SharedPreferences.getInstance();
+     prefs.remove('current_workout_exercises');
+     prefs.remove('current_workout_active');
+     prefs.remove('current_workout_seconds');
+     prefs.remove('current_workout_type');
+  }
+
   void addExercise(WorkoutExercise exercise) {
     _exercises.add(exercise);
+    _saveState();
     notifyListeners();
   }
 
@@ -49,10 +100,17 @@ class WorkoutViewModel extends ChangeNotifier {
       // Create new
       _exercises.add(WorkoutExercise(name: exerciseName, sets: [WorkoutSet(reps: reps, weight: weight)]));
     }
+    _saveState();
     notifyListeners();
   }
 
   // --- Timer Logic ---
+  void setWorkoutType(String type) {
+    _workoutType = type;
+    _saveState();
+    notifyListeners();
+  }
+
   void toggleWorkout() {
     if (_isWorkingOut) {
       _stopWorkout();
@@ -61,31 +119,59 @@ class WorkoutViewModel extends ChangeNotifier {
     }
   }
 
-  void _startWorkout() async {
+  void _startWorkout() {
     _isWorkingOut = true;
     _seconds = 0;
     _totalDistance = 0;
     _currentPace = 0;
     _lastPosition = null;
     
-    // Start Timer
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _seconds++;
-      notifyListeners();
-    });
-
-    // Start GPS
-    await _initGPS();
+    _startTimer();
     
+    // Start GPS only for outdoor activities
+    if (['Run', 'Cycling', 'Sports'].contains(_workoutType)) {
+      _initGPS();
+    }
+    _saveState();
     notifyListeners();
   }
 
-  void _stopWorkout() {
+  void _startTimer() {
+     _timer?.cancel();
+     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _seconds++;
+      if (_seconds % 5 == 0) _saveState(); // Save every 5s
+      notifyListeners();
+    });
+  }
+
+  void _stopWorkout() async {
     _isWorkingOut = false;
     _timer?.cancel();
     _positionStream?.cancel();
+    
+    // Save session to DB
+    if (_exercises.isNotEmpty || _seconds > 60) {
+       final session = WorkoutSession(
+         date: DateTime.now(),
+         durationSeconds: _seconds,
+         exercises: _exercises
+       );
+       
+       final today = await _logRepo.getLogForDate(DateTime.now());
+       final updatedLog = today.copyWith(
+         workoutDone: true,
+         workouts: [...today.workouts, session]
+       );
+       await _logRepo.saveLog(updatedLog);
+    }
+
+    // Clear local state
+    _exercises = [];
+    _seconds = 0;
+    _clearResultState();
+    
     notifyListeners();
-     // Future: Save session to DB
   }
 
   // --- GPS Logic ---

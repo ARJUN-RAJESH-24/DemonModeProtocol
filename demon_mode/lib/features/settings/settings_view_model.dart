@@ -11,6 +11,13 @@ class SettingsViewModel extends ChangeNotifier {
   List<String> _habits = [];
   String _unitSystem = 'metric';
 
+  // Profile
+  int? age;
+  double? height; // cm
+  double? weight; // kg
+  String goal = 'maintain'; // cut, bulk, maintain
+  double? tdee;
+
   bool get biometricsEnabled => _biometricsEnabled;
   String get version => _version;
   List<String> get habits => _habits;
@@ -25,6 +32,13 @@ class SettingsViewModel extends ChangeNotifier {
     
     _habits = await _prefsRepo.getHabits();
     _unitSystem = await _prefsRepo.getUnitSystem();
+
+    // Load Profile
+    age = prefs.getInt('profile_age');
+    height = prefs.getDouble('profile_height');
+    weight = prefs.getDouble('profile_weight');
+    goal = prefs.getString('profile_goal') ?? 'maintain';
+    _calculateTDEE();
     
     notifyListeners();
   }
@@ -58,6 +72,46 @@ class SettingsViewModel extends ChangeNotifier {
     final db = DatabaseService.instance;
     final database = await db.database;
     await database.delete('daily_logs');
+    await database.delete('meal_logs');
     debugPrint("All data cleared.");
+  }
+
+  Future<void> updateProfile({int? a, double? h, double? w, String? g}) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (a != null) { age = a; await prefs.setInt('profile_age', a); }
+    if (h != null) { height = h; await prefs.setDouble('profile_height', h); }
+     if (w != null) { weight = w; await prefs.setDouble('profile_weight', w); }
+    if (g != null) { goal = g; await prefs.setString('profile_goal', g); }
+    _calculateTDEE();
+    notifyListeners();
+  }
+  
+  void _calculateTDEE() {
+    if (weight == null || height == null || age == null) return;
+    // Mifflin-St Jeor (Male default for "Demon Mode")
+    double bmr = (10 * weight!) + (6.25 * height!) - (5 * age!) + 5;
+    
+    // Activity Multiplier (Moderate default)
+    double activity = 1.55; 
+    
+    double maintenance = bmr * activity;
+    
+    if (goal == 'cut') {
+      tdee = maintenance - 500;
+    } else if (goal == 'bulk') {
+      tdee = maintenance + 500;
+    } else {
+      tdee = maintenance;
+    }
+  }
+
+  Future<void> exportData() async {
+    // Basic export stub
+    debugPrint("Exporting data invoked.");
+  }
+
+  Future<void> importData() async {
+    // Basic import stub
+    debugPrint("Importing data invoked.");
   }
 }

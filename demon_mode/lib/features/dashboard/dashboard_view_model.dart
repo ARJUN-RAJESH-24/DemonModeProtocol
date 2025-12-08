@@ -18,6 +18,7 @@ class DashboardViewModel extends ChangeNotifier {
   int get steps => _steps;
   String get status => _status;
   List<DailyLogModel> get weeklyLogs => _weeklyLogs;
+  DailyLogModel? get todayLog => _weeklyLogs.isNotEmpty ? _weeklyLogs.last : null;
 
   Future<void> init() async {
     await _checkPermissions();
