@@ -55,5 +55,22 @@ class DailyLogRepository {
     final result = await db.query('daily_logs');
     return result.map((e) => DailyLogModel.fromJson(e)).toList();
   }
+
+  Future<double> getDailyCalories(DateTime date) async {
+    final db = await _dbService.database;
+    final dateStr = date.toIso8601String().split('T')[0];
+    
+    final result = await db.rawQuery('''
+      SELECT SUM(f.kcal * m.serving_multiplier) as total_kcal
+      FROM meal_logs m
+      JOIN foods f ON m.food_id = f.id
+      WHERE m.date = ?
+    ''', [dateStr]);
+
+    if (result.isNotEmpty && result.first['total_kcal'] != null) {
+      return (result.first['total_kcal'] as num).toDouble();
+    }
+    return 0.0;
+  }
 }
 

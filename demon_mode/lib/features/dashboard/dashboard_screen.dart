@@ -6,13 +6,17 @@ import '../../data/repositories/daily_log_repository.dart';
 import '../../core/theme/app_pallete.dart';
 import 'dashboard_view_model.dart';
 import '../settings/settings_screen.dart';
+import '../settings/settings_view_model.dart';
 import '../zen_mode/zen_mode_screen.dart';
 import '../daily_log/widgets/glass_action_card.dart';
 import '../daily_log/daily_log_view_model.dart';
 import '../nutrition/nutrition_screen.dart';
+import '../nutrition/nutrition_view_model.dart';
 import '../expert_hub/expert_hub_screen.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../daily_log/demon_habits_screen.dart';
+import '../workout/workout_screen.dart';
+import 'panic_mode_screen.dart'; // Import Panic Mode
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,7 +31,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardViewModel>().init();
-      // Ensure daily log is fresh
       context.read<DailyLogViewModel>().loadLog(DateTime.now());
     });
   }
@@ -35,10 +38,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DashboardViewModel>();
+    final nutVm = context.watch<NutritionViewModel>();
+    final logVm = context.watch<DailyLogViewModel>();
+    final settingsVm = context.watch<SettingsViewModel>();
+
+    final userLog = logVm.currentLog;
+    final habits = settingsVm.habits;
+    final logHabits = userLog?.customHabits ?? {};
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DEMON MODE'),
+        title: const Text('DEMON MODE // DASH'),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.settings),
@@ -49,223 +59,276 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
            IconButton(
-            icon: const Icon(Icons.self_improvement), // Zen Icon
+            icon: const Icon(Icons.accessibility_new), 
             onPressed: () {
-               HapticFeedback.lightImpact();
-               Navigator.push(context, MaterialPageRoute(builder: (_) => const ZenModeScreen()));
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen()));
             },
           ),
-
         ],
       ),
-      body: SingleChildScrollView(
+      body: userLog == null 
+        ? const Center(child: CircularProgressIndicator()) 
+        : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Zen Quote Card
-            const GlassActionCard(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
+            // Streak Banner
+            if (vm.streak > 0)
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.redAccent.withOpacity(0.3))
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text("DAILY STOIC", style: TextStyle(fontWeight: FontWeight.bold, color: AppPallete.secondaryColor, letterSpacing: 2)),
-                    SizedBox(height: 10),
-                    Text(
-                      '"The obstacle is the way."', // Placeholder
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontStyle: FontStyle.italic, fontSize: 16),
-                    ),
+                    const Icon(Icons.local_fire_department, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    Text("Streak: ${vm.streak} Days", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
 
-            // Steps Ring
-            SizedBox(
-              height: 250,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                   SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: CircularProgressIndicator(
-                      value: vm.steps / 10000, // Goal: 10k
-                      strokeWidth: 15,
-                      backgroundColor: AppPallete.surfaceColor,
-                      color: AppPallete.primaryColor,
+            // Demon Score Ring
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  height: 250,
+                  width: 250,
+                  child: CircularProgressIndicator(
+                    value: userLog.demonScore / 10.0,
+                    strokeWidth: 20,
+                    backgroundColor: Colors.white10,
+                    color: _getScoreColor(userLog.demonScore),
+                    strokeCap: StrokeCap.round,
+                  ),
+                ),
+                Column(
+                  children: [
+                    Text(
+                      userLog.demonScore.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 60, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.directions_run, size: 40, color: AppPallete.primaryColor),
-                      Text(
-                        "${vm.steps}",
-                        style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-                      ),
-                      const Text("STEPS", style: TextStyle(color: Colors.grey, letterSpacing: 2)),
-                    ],
-                  ),
+                    const Text("DEMON SCORE", style: TextStyle(letterSpacing: 2, color: Colors.grey)),
+                  ],
+                )
+              ],
+            ),
+            
+            const SizedBox(height: 30),
+
+            // Mood & Focus Slider
+            GlassActionCard(
+               child: Padding(
+                 padding: const EdgeInsets.all(16),
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         const Text("MOOD & FOCUS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+                         Text("${userLog.moodScore}%", style: const TextStyle(fontWeight: FontWeight.bold, color: AppPallete.primaryColor)),
+                       ],
+                     ),
+                     Slider(
+                       value: userLog.moodScore.toDouble(),
+                       min: 0, 
+                       max: 100,
+                       activeColor: AppPallete.primaryColor,
+                       inactiveColor: Colors.white10,
+                       onChanged: (val) {
+                          logVm.updateMoodScore(val.toInt());
+                       },
+                     ),
+                     const Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text("Weak", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                         Text("Demon", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                       ],
+                     )
+                   ],
+                 ),
+               ),
+            ),
+            
+            const SizedBox(height: 16),
+
+            // Nutrition Summary (Calories In vs Out)
+            GlassActionCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("CALORIES", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 10)),
+                            const SizedBox(height: 4),
+                            Text("${nutVm.totalKCal.toInt()} / ${nutVm.targetKCal.toInt()}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        // Mini Macros
+                        Row(
+                           children: [
+                              _MiniMacro("P", nutVm.totalProtein.toInt(), Colors.blue),
+                              const SizedBox(width: 8),
+                              _MiniMacro("C", nutVm.totalCarbs.toInt(), Colors.green),
+                              const SizedBox(width: 8),
+                              _MiniMacro("F", nutVm.totalFats.toInt(), Colors.orange),
+                           ],
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                       borderRadius: BorderRadius.circular(4),
+                       child: LinearProgressIndicator(
+                         value: nutVm.targetKCal > 0 ? (nutVm.totalKCal / nutVm.targetKCal).clamp(0.0, 1.0) : 0,
+                         color: AppPallete.primaryColor,
+                         backgroundColor: Colors.white10,
+                         minHeight: 6,
+                       ),
+                    )
+                  ],
+                ),
+              ),
+              onTap: () {
+                 // Open Nutrition Tab via NavigationBar logic? 
+                 // It's in ProtocolLog now. We can't easily switch tabs from here without global key or provider logic.
+                 // For now, simple user tap on 'LOG' botton nav is enough.
+              },
+            ),
+
+            const SizedBox(height: 20),
+            
+            // "Demon Protocol" Checklist
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text("NON-NEGOTIABLES", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: AppPallete.primaryColor)),
+            ),
+            const SizedBox(height: 10),
+            
+            Container(
+              decoration: BoxDecoration(
+                color: AppPallete.surfaceColor,
+                borderRadius: BorderRadius.circular(16)
+              ),
+              child: Column(
+                children: [
+                   // Sleep Check
+                   SwitchListTile(
+                     title: const Text("Sleep 7+ Hours", style: TextStyle(fontWeight: FontWeight.bold)),
+                     subtitle: const Text("Recovery Basis", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                     secondary: const Icon(Icons.bed, color: Colors.deepPurpleAccent),
+                     value: userLog.sleepHours >= 7,
+                     activeColor: AppPallete.primaryColor,
+                     onChanged: (val) {
+                        logVm.updateSleep(val ? 8.0 : 6.0);
+                     },
+                   ),
+                   const Divider(color: Colors.white10),
+                   // Dynamic Habits
+                   ...habits.map((habit) {
+                     final isDone = logHabits[habit] ?? false;
+                     return Column(
+                       children: [
+                         SwitchListTile(
+                           title: Text(habit, style: const TextStyle(fontWeight: FontWeight.bold)),
+                           secondary: const Icon(Icons.check_circle_outline, color: Colors.grey),
+                           value: isDone,
+                           activeColor: AppPallete.primaryColor,
+                           onChanged: (val) {
+                             HapticFeedback.lightImpact();
+                             logVm.toggleCustomHabit(habit, val);
+                           },
+                         ),
+                         if (habit != habits.last) const Divider(color: Colors.white10),
+                       ],
+                     );
+                   }).toList(),
                 ],
               ),
             ),
             
-            const SizedBox(height: 10),
+            const SizedBox(height: 30),
 
-            // Feature Grid
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _FeatureCard(
-                  icon: Icons.restaurant,
-                  title: "NUTRITION",
-                  color: Colors.green,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NutritionScreen())),
-                ),
-                 _FeatureCard(
-                  icon: Icons.school,
-                  title: "EXPERT HUB",
-                  color: Colors.redAccent,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertHubScreen())),
-                ),
-                _FeatureCard(
-                  icon: Icons.accessibility_new,
-                  title: "BODY METRICS",
-                  color: Colors.purple,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen())),
-                ),
-                 _FeatureCard(
-                  icon: Icons.bolt,
-                  title: "DEMON SCORE",
-                  value: vm.todayLog?.demonScore.toStringAsFixed(1),
-                  color: Colors.orange,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DemonHabitsScreen())),
-                ),
-              ],
+            // Zen Quote
+            GlassActionCard(
+               child: Padding(
+                 padding: const EdgeInsets.all(16),
+                 child: Column(
+                   children: [
+                     const Icon(Icons.format_quote, color: Colors.white54),
+                     Text(
+                       '"Discipline is doing what you hate to do, but doing it like you love it."',
+                       textAlign: TextAlign.center,
+                       style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white70),
+                     ),
+                     const SizedBox(height: 5),
+                     const Text("- M. Tyson", style: TextStyle(fontSize: 10, color: Colors.grey))
+                   ],
+                 ),
+               ),
+               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ZenModeScreen())),
             ),
-            const SizedBox(height: 20),
             
-            // Weekly Consistency
-             const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("WEEKLY CONSISTENCY", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                   borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: vm.weeklyLogs.asMap().entries.map((e) {
-                        return FlSpot(e.key.toDouble(), e.value.workoutDone ? 1 : 0);
-                      }).toList(),
-                      isCurved: true,
-                      color: AppPallete.primaryColor,
-                      barWidth: 4,
-                      dotData: const FlDotData(show: true),
-                      belowBarData: BarAreaData(show: true, color: AppPallete.primaryColor.withOpacity(0.1)),
-                    ),
-                  ],
+            const SizedBox(height: 40),
+
+            // Panic Button (Secret Mode)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                   Navigator.push(context, MaterialPageRoute(builder: (_) => const PanicModeScreen()));
+                },
+                icon: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                label: const Text("EMERGENCY DEMON ACTIVATION", style: TextStyle(color: Colors.redAccent, letterSpacing: 1.2)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  side: const BorderSide(color: Colors.redAccent, width: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                 ),
               ),
             ),
+            
+            const SizedBox(height: 80),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppPallete.primaryColor,
-        child: const Icon(Icons.add, color: Colors.black),
-        onPressed: () {
-          showModalBottomSheet(
-            context: context, 
-            backgroundColor: AppPallete.surfaceColor,
-            builder: (ctx) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.local_drink, color: Colors.blue),
-                  title: const Text("Log Water (+250ml)"),
-                  onTap: () {
-                    context.read<DailyLogViewModel>().updateWater(250);
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Water Logged")));
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.monitor_weight, color: Colors.purple),
-                  title: const Text("Log Weight"),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen()));
-                  },
-                ),
-                 ListTile(
-                  leading: const Icon(Icons.mood, color: Colors.yellow),
-                  title: const Text("Log Mood"),
-                  onTap: () {
-                    // Quick Mood logic or nav? Let's just nav to Daily Log for full details
-                    // Or keep it simple for now
-                     Navigator.pop(ctx);
-                     // Navigator.push... 
-                     // Since DailyLogScreen is complex, let's just hint functionality
-                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mood logging coming to Quick Actions soon.")));
-                  },
-                ),
-              ],
-            )
-          );
-        },
       ),
     );
   }
+
+  Color _getScoreColor(double score) {
+    if (score >= 8) return AppPallete.primaryColor;
+    if (score >= 5) return Colors.orange;
+    return Colors.grey;
+  }
 }
 
-class _FeatureCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? value;
+class _MiniMacro extends StatelessWidget {
+  final String label;
+  final int val;
   final Color color;
-  final VoidCallback onTap;
-
-  const _FeatureCard({required this.icon, required this.title, this.value, required this.color, required this.onTap});
-
+  const _MiniMacro(this.label, this.val, this.color);
+  
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppPallete.surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1)),
-            if (value != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(value!, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
-              )
-          ],
-        ),
-      ),
+    return Column(
+      children: [
+        Text(val.toString(), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+      ],
     );
   }
 }

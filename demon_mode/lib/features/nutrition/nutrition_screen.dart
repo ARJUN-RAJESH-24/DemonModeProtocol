@@ -5,14 +5,14 @@ import '../../core/theme/app_pallete.dart';
 import '../../data/models/food_model.dart';
 import '../settings/settings_view_model.dart';
 
-class NutritionScreen extends StatefulWidget {
-  const NutritionScreen({super.key});
+class NutritionPage extends StatefulWidget {
+  const NutritionPage({super.key});
 
   @override
-  State<NutritionScreen> createState() => _NutritionScreenState();
+  State<NutritionPage> createState() => _NutritionPageState();
 }
 
-class _NutritionScreenState extends State<NutritionScreen> {
+class _NutritionPageState extends State<NutritionPage> {
   @override
   void initState() {
     super.initState();
@@ -29,16 +29,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final vm = context.watch<NutritionViewModel>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("NUTRITION PROTOCOL"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-               showSearch(context: context, delegate: FoodSearchDelegate(vm));
-            },
-          )
-        ],
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppPallete.primaryColor,
+        child: const Icon(Icons.add, color: Colors.black),
+        onPressed: () {
+           showSearch(context: context, delegate: FoodSearchDelegate(vm));
+        },
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -96,12 +92,35 @@ class _NutritionScreenState extends State<NutritionScreen> {
   }
 
   Widget _MacroItem(String label, double val, double target, Color color) {
+    double progress = target > 0 ? (val / target).clamp(0.0, 1.0) : 0;
     return Column(
       children: [
-        Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+        const SizedBox(height: 6),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+             SizedBox(
+               width: 60,
+               height: 60,
+               child: CircularProgressIndicator(
+                 value: progress,
+                 backgroundColor: color.withOpacity(0.2),
+                 color: color,
+                 strokeWidth: 6,
+                 strokeCap: StrokeCap.round,
+               ),
+             ),
+             Column(
+               children: [
+                 Text("${val.toInt()}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                 Text("g", style: TextStyle(color: color, fontSize: 10)),
+               ],
+             )
+          ],
+        ),
         const SizedBox(height: 4),
-        Text("${val.toInt()}g", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        Text("/ ${target.toInt()}", style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        Text("of ${target.toInt()}g", style: const TextStyle(color: Colors.grey, fontSize: 10)),
       ],
     );
   }

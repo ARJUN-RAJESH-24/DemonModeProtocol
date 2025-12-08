@@ -38,12 +38,40 @@ class _SettingsBody extends StatelessWidget {
                      children: [
                        Expanded(child: _ProfileInput("Age", vm.age?.toString(), (v) => vm.updateProfile(a: int.tryParse(v)))),
                        const SizedBox(width: 10),
+                       Expanded(child: DropdownButtonFormField<String>(
+                         value: vm.gender,
+                         dropdownColor: Colors.grey[900],
+                         decoration: const InputDecoration(labelText: "Gender", border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
+                         items: const [
+                           DropdownMenuItem(value: 'male', child: Text("Male")),
+                           DropdownMenuItem(value: 'female', child: Text("Female")),
+                         ],
+                         onChanged: (val) => vm.updateProfile(sex: val),
+                       )),
+                     ],
+                   ),
+                   const SizedBox(height: 10),
+                   Row(
+                     children: [
                        Expanded(child: _ProfileInput("Height (cm)", vm.height?.toString(), (v) => vm.updateProfile(h: double.tryParse(v)))),
                        const SizedBox(width: 10),
                        Expanded(child: _ProfileInput("Weight (kg)", vm.weight?.toString(), (v) => vm.updateProfile(w: double.tryParse(v)))),
                      ],
                    ),
-                   const SizedBox(height: 20),
+                   const SizedBox(height: 10),
+                   DropdownButtonFormField<double>(
+                     value: vm.activityLevel,
+                     dropdownColor: Colors.grey[900],
+                     decoration: const InputDecoration(labelText: "Activity Level", border: OutlineInputBorder()),
+                     items: const [
+                       DropdownMenuItem(value: 1.2, child: Text("Sedentary (Office Job)")),
+                       DropdownMenuItem(value: 1.375, child: Text("Light Exercise (1-2 days)")),
+                       DropdownMenuItem(value: 1.55, child: Text("Moderate (3-5 days)")),
+                       DropdownMenuItem(value: 1.725, child: Text("Heavy (6-7 days)")),
+                     ],
+                     onChanged: (val) => vm.updateProfile(activity: val),
+                   ),
+                   const SizedBox(height: 10),
                    DropdownButtonFormField<String>(
                      value: vm.goal,
                      dropdownColor: Colors.grey[900],
@@ -55,9 +83,38 @@ class _SettingsBody extends StatelessWidget {
                      ],
                      onChanged: (val) => vm.updateProfile(g: val),
                    ),
+                   const SizedBox(height: 20),
+                   // Calorie Override
+                   Row(
+                     children: [
+                        Expanded(
+                          child: TextFormField(
+                            initialValue: vm.calorieTargetOverride?.toString(),
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Override Calorie Target (Optional)",
+                              border: OutlineInputBorder(),
+                              hintText: "Leave empty to auto-calc"
+                            ),
+                            onChanged: (val) {
+                               if (val.isEmpty) {
+                                 vm.updateProfile(calOverride: -1);
+                               } else {
+                                 vm.updateProfile(calOverride: double.tryParse(val));
+                               }
+                            },
+                          ),
+                        ),
+                     ],
+                   ),
                    const SizedBox(height: 10),
                    if (vm.tdee != null)
-                     Text("Target: ${vm.tdee!.toInt()} kcal", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent))
+                     Container(
+                       padding: const EdgeInsets.all(8),
+                       width: double.infinity,
+                       decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                       child: Center(child: Text("DAILY TARGET: ${vm.tdee!.toInt()} KCAL", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent, fontSize: 16))),
+                     )
                 ],
               ),
             ),

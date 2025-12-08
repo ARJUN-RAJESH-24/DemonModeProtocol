@@ -25,7 +25,7 @@ class DatabaseService {
     try {
       return await openDatabase(
         path,
-        version: 5,
+        version: 6,
         password: password,
         onCreate: _createDB,
         onUpgrade: (db, oldVersion, newVersion) async {
@@ -49,6 +49,14 @@ class DatabaseService {
               await db.execute("ALTER TABLE daily_logs ADD COLUMN demon_score REAL DEFAULT 0");
             } catch (_) {}
           }
+           if (oldVersion < 6) {
+             try {
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN coffee_intake INTEGER DEFAULT 0");
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN mood_score INTEGER DEFAULT 50");
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN journal_entry TEXT");
+              await db.execute("ALTER TABLE daily_logs ADD COLUMN supplements TEXT");
+            } catch (_) {}
+          }
         },
       );
     } catch (e) {
@@ -57,7 +65,7 @@ class DatabaseService {
       await deleteDatabase(path);
       return await openDatabase(
         path,
-        version: 5,
+        version: 6,
         password: password,
         onCreate: _createDB,
         onUpgrade: (_, __, ___) {},
@@ -87,11 +95,15 @@ class DatabaseService {
         id $idType,
         date $textType,
         water_intake $intType,
+        coffee_intake INTEGER DEFAULT 0,
         workout_done $intType,
         mood $textType,
+        mood_score INTEGER DEFAULT 50,
         photo_paths $textType,
         notes TEXT,
+        journal_entry TEXT,
         custom_habits TEXT,
+        supplements TEXT,
         workout_details TEXT,
         sleep_hours REAL DEFAULT 0,
         demon_score REAL DEFAULT 0,

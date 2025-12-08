@@ -25,14 +25,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.12.0"
-  bluez:
-    dependency: transitive
-    description:
-      name: bluez
-      sha256: "61a7204381925896a374301498f2f5399e59827c6498ae1e924aaa598751b545"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.3"
   boolean_selector:
     dependency: transitive
     description:
@@ -105,30 +97,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
-  dbus:
-    dependency: transitive
-    description:
-      name: dbus
-      sha256: "79e0c23480ff85dc68de79e2cd6334add97e48f7f4865d17686dd6ea81a47e8c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.11"
-  dio:
-    dependency: transitive
-    description:
-      name: dio
-      sha256: d90ee57923d1828ac14e492ca49440f65477f4bb1263575900be731a3dac66a9
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.9.0"
-  dio_web_adapter:
-    dependency: transitive
-    description:
-      name: dio_web_adapter
-      sha256: "7586e476d70caecaf1686d21eee7247ea43ef5c345eab9e0cc3583ff13378d78"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.1"
   equatable:
     dependency: transitive
     description:
@@ -214,54 +182,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_blue_plus:
-    dependency: "direct main"
-    description:
-      name: flutter_blue_plus
-      sha256: "69a8c87c11fc792e8cf0f997d275484fbdb5143ac9f0ac4d424429700cb4e0ed"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.36.8"
-  flutter_blue_plus_android:
-    dependency: transitive
-    description:
-      name: flutter_blue_plus_android
-      sha256: "6f7fe7e69659c30af164a53730707edc16aa4d959e4c208f547b893d940f853d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.4"
-  flutter_blue_plus_darwin:
-    dependency: transitive
-    description:
-      name: flutter_blue_plus_darwin
-      sha256: "682982862c1d964f4d54a3fb5fccc9e59a066422b93b7e22079aeecd9c0d38f8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.3"
-  flutter_blue_plus_linux:
-    dependency: transitive
-    description:
-      name: flutter_blue_plus_linux
-      sha256: "56b0c45edd0a2eec8f85bd97a26ac3cd09447e10d0094fed55587bf0592e3347"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.3"
-  flutter_blue_plus_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_blue_plus_platform_interface
-      sha256: "84fbd180c50a40c92482f273a92069960805ce324e3673ad29c41d2faaa7c5c2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.0"
-  flutter_blue_plus_web:
-    dependency: transitive
-    description:
-      name: flutter_blue_plus_web
-      sha256: a1aceee753d171d24c0e0cdadb37895b5e9124862721f25f60bb758e20b72c99
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.2"
   flutter_inappwebview:
     dependency: transitive
     description:
@@ -608,14 +528,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.1"
-  logger:
-    dependency: transitive
-    description:
-      name: logger
-      sha256: a7967e31b703831a893bbc3c3dd11db08126fe5f369b5c648a36f821979f5be3
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.6.2"
   logging:
     dependency: transitive
     description:
@@ -832,14 +744,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
-  rxdart:
-    dependency: transitive
-    description:
-      name: rxdart
-      sha256: "5c3004a4a8dbb94bd4bf5412a4def4acdaa12e12f269737a5751369e12d1a962"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.28.0"
   sensors_plus:
     dependency: "direct main"
     description:
@@ -925,14 +829,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.1"
-  spotify_sdk:
-    dependency: "direct main"
-    description:
-      name: spotify_sdk
-      sha256: "4c7a3b79f0370e7ae8ac07cad5e630d0bb3ad118f4c16219ec37f6988a65465e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.2"
   sqflite_common:
     dependency: transitive
     description:

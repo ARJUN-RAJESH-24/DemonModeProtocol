@@ -9,3 +9,20 @@ class AppPallete {
   static const Color whiteColor = Colors.white;
   static const Color greyColor = Colors.grey;
 }
+class AppTheme {
+  static final darkTheme = ThemeData.dark().copyWith(
+    scaffoldBackgroundColor: AppPallete.backgroundColor,
+    primaryColor: AppPallete.primaryColor,
+    colorScheme: const ColorScheme.dark(
+      primary: AppPallete.primaryColor,
+      surface: AppPallete.surfaceColor,
+      background: AppPallete.backgroundColor,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppPallete.backgroundColor,
+      elevation: 0,
+      centerTitle: true,
+      titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 1.5, color: Colors.white),
+    ),
+  );
+}

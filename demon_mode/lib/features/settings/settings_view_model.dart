@@ -15,7 +15,10 @@ class SettingsViewModel extends ChangeNotifier {
   int? age;
   double? height; // cm
   double? weight; // kg
+  String gender = 'male';
+  double activityLevel = 1.55;
   String goal = 'maintain'; // cut, bulk, maintain
+  double? calorieTargetOverride;
   double? tdee;
 
   bool get biometricsEnabled => _biometricsEnabled;
@@ -37,9 +40,12 @@ class SettingsViewModel extends ChangeNotifier {
     age = prefs.getInt('profile_age');
     height = prefs.getDouble('profile_height');
     weight = prefs.getDouble('profile_weight');
+    gender = prefs.getString('profile_gender') ?? 'male';
+    activityLevel = prefs.getDouble('profile_activity') ?? 1.55;
     goal = prefs.getString('profile_goal') ?? 'maintain';
-    _calculateTDEE();
+    calorieTargetOverride = prefs.getDouble('profile_calorie_override');
     
+    _calculateTDEE();
     notifyListeners();
   }
 
@@ -76,25 +82,47 @@ class SettingsViewModel extends ChangeNotifier {
     debugPrint("All data cleared.");
   }
 
-  Future<void> updateProfile({int? a, double? h, double? w, String? g}) async {
+  Future<void> updateProfile({int? a, double? h, double? w, String? g, String? sex, double? activity, double? calOverride}) async {
     final prefs = await SharedPreferences.getInstance();
     if (a != null) { age = a; await prefs.setInt('profile_age', a); }
     if (h != null) { height = h; await prefs.setDouble('profile_height', h); }
      if (w != null) { weight = w; await prefs.setDouble('profile_weight', w); }
     if (g != null) { goal = g; await prefs.setString('profile_goal', g); }
+    if (sex != null) { gender = sex; await prefs.setString('profile_gender', sex); }
+    if (activity != null) { activityLevel = activity; await prefs.setDouble('profile_activity', activity); }
+    
+    if (calOverride != null) {
+       // if -1, clear it
+       if (calOverride < 0) {
+         calorieTargetOverride = null;
+         await prefs.remove('profile_calorie_override');
+       } else {
+         calorieTargetOverride = calOverride;
+         await prefs.setDouble('profile_calorie_override', calOverride);
+       }
+    }
+    
     _calculateTDEE();
     notifyListeners();
   }
   
   void _calculateTDEE() {
+    if (calorieTargetOverride != null) {
+      tdee = calorieTargetOverride;
+      return;
+    }
+  
     if (weight == null || height == null || age == null) return;
-    // Mifflin-St Jeor (Male default for "Demon Mode")
-    double bmr = (10 * weight!) + (6.25 * height!) - (5 * age!) + 5;
     
-    // Activity Multiplier (Moderate default)
-    double activity = 1.55; 
+    // Mifflin-St Jeor
+    double bmr = (10 * weight!) + (6.25 * height!) - (5 * age!);
+    if (gender == 'male') {
+      bmr += 5;
+    } else {
+      bmr -= 161;
+    }
     
-    double maintenance = bmr * activity;
+    double maintenance = bmr * activityLevel;
     
     if (goal == 'cut') {
       tdee = maintenance - 500;

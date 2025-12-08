@@ -5,7 +5,7 @@ import '../../core/theme/app_pallete.dart';
 import 'workout_view_model.dart';
 import '../daily_log/widgets/glass_action_card.dart';
 import '../../data/models/workout_model.dart';
-import '../devices/devices_screen.dart';
+import '../../data/models/workout_model.dart';
 
 class WorkoutScreen extends StatelessWidget {
   const WorkoutScreen({super.key});
@@ -27,12 +27,14 @@ class _WorkoutBody extends StatelessWidget {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final vm = context.watch<WorkoutViewModel>();
-    // Simple Calorie Estimate: 5 kcal/min for now
     final calories = (vm.seconds / 60 * 5).toInt();
-    // Demon Points: 1 pt per 10 mins
     final demonPts = (vm.seconds / 600).toInt();
+    final secProgress = (vm.seconds % 60) / 60.0;
+    
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
@@ -40,130 +42,191 @@ class _WorkoutBody extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bluetooth_audio),
-            onPressed: () {
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Checking Bluetooth State...")));
-               Navigator.push(context, MaterialPageRoute(builder: (_) => const DevicesScreen()));
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () { 
+              // Settings or configure workout type
             },
           )
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: vm.isWorkingOut ? FloatingActionButton(
         onPressed: () => _showAddSetDialog(context, vm),
         backgroundColor: AppPallete.primaryColor,
         child: const Icon(Icons.add, color: Colors.black),
-      ),
-      body: Column(
-        children: [
-           // Top Area: Timer & Main Stat
-           Expanded(
-             flex: 2,
-             child: Container(
-               alignment: Alignment.center,
-               child: Column(
-                 mainAxisAlignment: MainAxisAlignment.center,
-                 children: [
-                    Text(
-                      _formatTime(vm.seconds),
-                      style: const TextStyle(fontSize: 80, fontWeight: FontWeight.bold, fontFamily: 'monospace', letterSpacing: -2),
+      ) : null,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. TIMER SECTION (Top 35%)
+            SizedBox(
+              height: size.height * 0.35,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Base Ring
+                  SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: CircularProgressIndicator(
+                      value: 1.0,
+                      strokeWidth: 15,
+                      color: AppPallete.surfaceColor,
                     ),
-                    const Text("DURATION", style: TextStyle(color: Colors.grey, letterSpacing: 2)),
-                 ],
-               ),
-             ),
-           ),
-
-           // Stats Grid (Google Fit Style)
-           Expanded(
-             flex: 3,
-             child: Container(
-               padding: const EdgeInsets.symmetric(horizontal: 20),
-               child: GridView.count(
-                 crossAxisCount: 2,
-                 childAspectRatio: 1.5,
-                 crossAxisSpacing: 15,
-                 mainAxisSpacing: 15,
-                 children: [
-                   _MetricCard(label: "DISTANCE", value: "${vm.totalDistance.toStringAsFixed(2)}", unit: "km", icon: Icons.map),
-                   _MetricCard(label: "ENERGY", value: "$calories", unit: "kcal", icon: Icons.local_fire_department),
-                   _MetricCard(label: "PACE", value: vm.currentPace, unit: "min/km", icon: Icons.speed),
-                   _MetricCard(label: "DEMON PTS", value: "$demonPts", unit: "pts", icon: Icons.bolt),
-                 ],
-               ),
-             ),
-           ),
-
-           // Logs & Controls
-           Expanded(
-             flex: 3,
-             child: Container(
-               padding: const EdgeInsets.all(20),
-               decoration: const BoxDecoration(
-                 color: AppPallete.surfaceColor,
-                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-               ),
-               child: Column(
-                 children: [
-                   // Set Logs Preview (Last 2)
-                   if (vm.exercises.isNotEmpty)
-                     Expanded(
-                       child: ListView(
-                         children: vm.exercises.map((e) => ListTile(
-                           title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                           subtitle: Text("${e.sets.length} Sets Completed"),
-                           trailing: Text("${e.sets.last.weight}kg x ${e.sets.last.reps}"),
-                         )).toList(),
-                       ),
-                     )
-                   else 
-                     const Expanded(child: Center(child: Text("NO SETS LOGGED", style: TextStyle(color: Colors.grey)))),
-
-                   // Controls
-                   const SizedBox(height: 10),
-                   Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _ControlButton(
-                          icon: Icons.stop, 
-                          label: "STOP", 
-                          color: Colors.red[900]!, 
-                          onTap: vm.toggleWorkout // Handles stop logic if paused? No, toggle pauses. We need Stop.
-                          // VM has _stopWorkout. Exposed? 
-                          // toggleWorkout call: if workingOut -> _stopWorkout(). No, it toggles _isWorkingOut and cancels timer.
-                          // Wait, looking at VM: toggleWorkout() -> if _isWorkingOut -> _stopWorkout().
-                          // Correct.
+                  ),
+                  // Active Ring
+                  SizedBox(
+                    width: 220,
+                    height: 220,
+                    child: CircularProgressIndicator(
+                      value: secProgress,
+                      strokeWidth: 15,
+                      color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.grey,
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _formatTime(vm.seconds),
+                        style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold, fontFamily: 'monospace', letterSpacing: -2),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        vm.isWorkingOut ? "ACTIVE" : "READY",
+                        style: TextStyle(
+                            color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.grey, 
+                            letterSpacing: 4, 
+                            fontWeight: FontWeight.bold
                         ),
-                        // Play/Pause
-                        GestureDetector(
-                          onTap: vm.toggleWorkout,
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: AppPallete.primaryColor,
-                              shape: BoxShape.circle,
-                              boxShadow: const [BoxShadow(color: AppPallete.primaryColor, blurRadius: 20, spreadRadius: -5)]
-                            ),
-                            child: Icon(
-                              vm.isWorkingOut ? Icons.pause : Icons.play_arrow, 
-                              size: 40, 
-                              color: Colors.black
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // 2. METRICS ROW (Compact)
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _MetricChip("DISTANCE", "${vm.totalDistance.toStringAsFixed(2)} km", Icons.map),
+                  const SizedBox(width: 10),
+                  _MetricChip("ENERGY", "$calories kcal", Icons.local_fire_department),
+                  const SizedBox(width: 10),
+                  _MetricChip("PACE", vm.currentPace, Icons.speed),
+                  const SizedBox(width: 10),
+                  _MetricChip("POINTS", "$demonPts", Icons.bolt),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+
+            // 3. LOGS & CONTROLS (Expanded Bottom Panel)
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: AppPallete.surfaceColor,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, -5))]
+                ),
+                child: Column(
+                  children: [
+                    // Header / Handle
+                    Container(
+                      margin: const EdgeInsets.only(top: 16, bottom: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(2)),
+                    ),
+                    const Text("SESSION LOG", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.grey)),
+                    
+                    // List
+                    Expanded(
+                       child: vm.exercises.isEmpty 
+                         ? const Center(child: Text("NO SETS RECORDED", style: TextStyle(color: Colors.white24, letterSpacing: 2)))
+                         : ListView.separated(
+                             padding: const EdgeInsets.all(20),
+                             itemCount: vm.exercises.length,
+                             separatorBuilder: (_, __) => const SizedBox(height: 10),
+                             itemBuilder: (ctx, i) {
+                               final e = vm.exercises[i];
+                               return Container(
+                                 padding: const EdgeInsets.all(12),
+                                 decoration: BoxDecoration(
+                                   color: Colors.black26, 
+                                   borderRadius: BorderRadius.circular(12),
+                                   border: Border.all(color: Colors.white10)
+                                 ),
+                                 child: Row(
+                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                   children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                          Text("${e.sets.length} Sets", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                        ],
+                                      ),
+                                      Text(
+                                        "${e.sets.last.weight}kg x ${e.sets.last.reps}",
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppPallete.primaryColor),
+                                      ),
+                                   ],
+                                 ),
+                               );
+                             }
+                           ),
+                    ),
+
+                    // Controls Area
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: const BoxDecoration(
+                        color: Colors.black26,
+                        border: Border(top: BorderSide(color: Colors.white10))
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _ControlButton(Icons.stop, "FINISH", Colors.redAccent, vm.toggleWorkout),
+                          
+                          // Big Play Button
+                           GestureDetector(
+                            onTap: vm.toggleWorkout,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: vm.isWorkingOut ? Colors.transparent : AppPallete.primaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppPallete.primaryColor, width: 2),
+                                boxShadow: [
+                                  if (!vm.isWorkingOut)
+                                    const BoxShadow(color: AppPallete.primaryColor, blurRadius: 15)
+                                ]
+                              ),
+                              child: Icon(
+                                vm.isWorkingOut ? Icons.pause : Icons.play_arrow, 
+                                size: 35, 
+                                color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.black
+                              ),
                             ),
                           ),
-                        ),
-                         _ControlButton(
-                          icon: Icons.music_note, 
-                          label: "MUSIC", 
-                          color: Colors.blueGrey, 
-                          onTap: vm.connectSpotify
-                        ),
-                      ],
-                   )
-                 ],
-               ),
-             ),
-           )
-        ],
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -176,23 +239,27 @@ class _WorkoutBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("LOG SET"),
+        backgroundColor: AppPallete.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("LOG SET", style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Exercise Name (e.g. Bench)")),
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Exercise Name", filled: true, fillColor: Colors.black12)),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: TextField(controller: repsController, decoration: const InputDecoration(labelText: "Reps"), keyboardType: TextInputType.number)),
+                Expanded(child: TextField(controller: repsController, decoration: const InputDecoration(labelText: "Reps", filled: true, fillColor: Colors.black12), keyboardType: TextInputType.number)),
                 const SizedBox(width: 10),
-                Expanded(child: TextField(controller: weightController, decoration: const InputDecoration(labelText: "Weight (kg)"), keyboardType: TextInputType.number)),
+                Expanded(child: TextField(controller: weightController, decoration: const InputDecoration(labelText: "Weight (kg)", filled: true, fillColor: Colors.black12), keyboardType: TextInputType.number)),
               ],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL")),
-          TextButton(
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppPallete.primaryColor),
             onPressed: () {
               if (nameController.text.isNotEmpty && repsController.text.isNotEmpty) {
                  vm.logSet(
@@ -203,7 +270,7 @@ class _WorkoutBody extends StatelessWidget {
                  Navigator.pop(ctx);
               }
             },
-            child: const Text("SAVE"),
+            child: const Text("SAVE SET", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -211,32 +278,33 @@ class _WorkoutBody extends StatelessWidget {
   }
 }
 
-class _MetricCard extends StatelessWidget {
+class _MetricChip extends StatelessWidget {
   final String label;
   final String value;
-  final String unit;
   final IconData icon;
 
-  const _MetricCard({required this.label, required this.value, required this.unit, required this.icon});
+  const _MetricChip(this.label, this.value, this.icon);
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(16),
+        color: AppPallete.surfaceColor,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white10),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppPallete.primaryColor),
+          Icon(icon, size: 16, color: AppPallete.primaryColor),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              Text("$unit $label", style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
             ],
           )
         ],
@@ -251,17 +319,26 @@ class _ControlButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _ControlButton({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ControlButton(this.icon, this.label, this.color, this.onTap);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(radius: 24, backgroundColor: color.withOpacity(0.2), child: Icon(icon, color: color)),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2), 
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.5))
+            ),
+            child: Icon(icon, color: color, size: 24)
+          ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold))
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1))
         ],
       ),
     );

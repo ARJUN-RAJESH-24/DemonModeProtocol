@@ -30,10 +30,11 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
           children: [
             // Stats Card
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppPallete.surfaceColor,
-                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(colors: [Colors.blueAccent.withOpacity(0.2), AppPallete.surfaceColor], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white10),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -45,66 +46,99 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
               ),
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             
             // Input Form
-            Card(
-              color: AppPallete.surfaceColor,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("UPDATE METRICS", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(child: _Input("Weight (kg)", (v) => vm.weight = double.tryParse(v), vm.weight?.toString())),
-                        const SizedBox(width: 10),
-                        Expanded(child: _Input("Height (cm)", (v) => vm.heightCm = double.tryParse(v), vm.heightCm?.toString())),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(child: _Input("Waist (cm)", (v) => vm.waist = double.tryParse(v), vm.waist?.toString())),
-                        const SizedBox(width: 10),
-                        Expanded(child: _Input("Neck (cm)", (v) => vm.neck = double.tryParse(v), vm.neck?.toString())),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-                        onPressed: () {
-                           vm.calculateAll();
-                           vm.saveLog();
-                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Metrics Saved")));
-                        },
-                        child: const Text("CALCULATE & SAVE", style: TextStyle(color: Colors.white)),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppPallete.surfaceColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   const Row(
+                    children: [
+                      Icon(Icons.edit, color: Colors.blueAccent, size: 20),
+                      SizedBox(width: 8),
+                      Text("UPDATE STATS", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(child: _Input("Weight (kg)", (v) => vm.weight = double.tryParse(v), vm.weight?.toString())),
+                      const SizedBox(width: 16),
+                      Expanded(child: _Input("Height (cm)", (v) => vm.heightCm = double.tryParse(v), vm.heightCm?.toString())),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _Input("Waist (cm)", (v) => vm.waist = double.tryParse(v), vm.waist?.toString())),
+                      const SizedBox(width: 16),
+                      Expanded(child: _Input("Neck (cm)", (v) => vm.neck = double.tryParse(v), vm.neck?.toString())),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
                       ),
-                    )
-                  ],
-                ),
+                      onPressed: () {
+                         vm.calculateAll();
+                         vm.saveLog();
+                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Metrics Saved")));
+                      },
+                      child: const Text("CALCULATE & SAVE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  )
+                ],
               ),
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             
-            // History Chart (Simple Weight)
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("WEIGHT TREND", style: TextStyle(fontWeight: FontWeight.bold)),
+            // History Chart
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, bottom: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.show_chart, color: Colors.grey[400]),
+                  const SizedBox(width: 8),
+                  const Text("WEIGHT HISTORY", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 200,
+            Container(
+              height: 250,
+              padding: const EdgeInsets.fromLTRB(10, 20, 20, 10),
+              decoration: BoxDecoration(
+                color: AppPallete.surfaceColor.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              // Use a gradient chart
               child: LineChart(
                 LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: true, border: Border.all(color: Colors.white10)),
+                  gridData: FlGridData(
+                     show: true, 
+                     drawVerticalLine: false, 
+                     getDrawingHorizontalLine: (_) => const FlLine(color: Colors.white10, strokeWidth: 1)
+                  ),
+                  titlesData: const FlTitlesData(
+                     show: true,
+                     topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                     rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                     leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), // Hide Y axis numbers for clean look? Or keep them? Let's hide to be minimal.
+                     bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
                       spots: vm.weightHistory.reversed.toList().asMap().entries.map((e) {
@@ -112,7 +146,20 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                       }).toList(),
                       isCurved: true,
                       color: Colors.blueAccent,
-                      barWidth: 3,
+                      barWidth: 4,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 4, color: Colors.blueAccent, strokeWidth: 2, strokeColor: Colors.black),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: [Colors.blueAccent.withOpacity(0.3), Colors.transparent],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
                     )
                   ]
                 )
@@ -127,8 +174,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
   Widget _StatItem(String label, String val) {
     return Column(
       children: [
-        Text(val, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(val, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.0)),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ],
     );
   }
@@ -137,10 +185,14 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
     return TextFormField(
       initialValue: initVal,
       keyboardType: TextInputType.number,
+      style: const TextStyle(fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        labelStyle: const TextStyle(color: Colors.grey),
+        filled: true,
+        fillColor: Colors.black12,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       onChanged: onChanged,
     );

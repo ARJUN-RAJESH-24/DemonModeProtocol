@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
-import 'package:spotify_sdk/models/player_state.dart' as spotify_player;
-import 'package:spotify_sdk/models/image_uri.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/workout_model.dart';
@@ -21,11 +18,6 @@ class WorkoutViewModel extends ChangeNotifier {
   double _currentPace = 0; // min/km
   Position? _lastPosition;
 
-  // Spotify State
-  bool _isConnected = false;
-  String _currentTrack = "Not Connected";
-  bool _isPaused = true;
-
   // Workout Types
   String _workoutType = 'Gym';
   final List<String> workoutTypes = ['Gym', 'Run', 'Cycling', 'Calisthenics', 'Sports'];
@@ -34,9 +26,10 @@ class WorkoutViewModel extends ChangeNotifier {
 
   // Gym State
   List<WorkoutExercise> _exercises = [];
+  bool _isPaused = false;
+
   int get seconds => _seconds;
   bool get isWorkingOut => _isWorkingOut;
-  String get currentTrack => _currentTrack;
   bool get isPaused => _isPaused;
   double get totalDistance => _totalDistance / 1000.0; // convert to km
   String get currentPace => _currentPace.toStringAsFixed(2);
@@ -220,52 +213,6 @@ class WorkoutViewModel extends ChangeNotifier {
       _lastPosition = position;
       notifyListeners();
     });
-  }
-
-  // --- Spotify Logic ---
-  Future<void> connectSpotify() async {
-    try {
-      final res = await SpotifySdk.connectToSpotifyRemote(
-        clientId: "4b92c4731f8742718137357c91c071d0", // Included a default/demo ID if possible or user's placeholder
-        redirectUrl: "demonmode://callback",
-      );
-      if (res) {
-        _isConnected = true;
-        _subscribeToPlayerState();
-        // Also fetch current state immediately
-        await SpotifySdk.resume(); 
-      }
-    } catch (e) {
-      debugPrint("Spotify Connect Error: $e");
-    }
-    notifyListeners();
-  }
-
-  void _subscribeToPlayerState() {
-    SpotifySdk.subscribePlayerState().listen((state) {
-      if (state.track != null) {
-        _currentTrack = "${state.track!.name} • ${state.track!.artist.name}";
-        _isPaused = state.isPaused;
-        notifyListeners();
-      }
-    });
-  }
-
-  Future<void> play() async { 
-    await SpotifySdk.resume(); 
-    _isPaused = false;
-    notifyListeners();
-  }
-  Future<void> pause() async { 
-    await SpotifySdk.pause();
-    _isPaused = true;
-    notifyListeners();
-  }
-  Future<void> skipNext() async { 
-    await SpotifySdk.skipNext(); 
-  }
-  Future<void> skipPrevious() async { 
-    await SpotifySdk.skipPrevious(); 
   }
 
   @override
