@@ -128,6 +128,8 @@ class _NutritionPageState extends State<NutritionPage> {
 
 class FoodSearchDelegate extends SearchDelegate {
   final NutritionViewModel vm;
+  String _lastQuery = '';
+  
   FoodSearchDelegate(this.vm);
 
   @override
@@ -141,25 +143,33 @@ class FoodSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    if (query.length > 2) {
-       vm.searchFood(query);
+    if (query != _lastQuery) {
+      _lastQuery = query;
+      if (query.length > 2) {
+         vm.searchFood(query);
+      }
     }
     
-    return ListView(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.add_circle, color: AppPallete.primaryColor),
-          title: const Text("Create New Food"),
-          subtitle: const Text("Enter macros manually"),
-          onTap: () => _showCreateFoodDialog(context),
-        ),
-        ...vm.foodSearchResults.map((food) => ListTile(
-          title: Text(food.name),
-          subtitle: Text("${food.kCal} kcal • ${food.protein}g P • ${food.carbs}g C • ${food.fats}g F"),
-          trailing: const Icon(Icons.add),
-          onTap: () => _showLogDialog(context, food),
-        )),
-      ],
+    return AnimatedBuilder(
+      animation: vm,
+      builder: (context, child) {
+        return ListView(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add_circle, color: AppPallete.primaryColor),
+              title: const Text("Create New Food"),
+              subtitle: const Text("Enter macros manually"),
+              onTap: () => _showCreateFoodDialog(context),
+            ),
+            ...vm.foodSearchResults.map((food) => ListTile(
+              title: Text(food.name),
+              subtitle: Text("${food.kCal} kcal • ${food.protein}g P • ${food.carbs}g C • ${food.fats}g F"),
+              trailing: const Icon(Icons.add),
+              onTap: () => _showLogDialog(context, food),
+            )),
+          ],
+        );
+      }
     );
   }
 
@@ -206,9 +216,10 @@ class FoodSearchDelegate extends SearchDelegate {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL")),
           TextButton(
             onPressed: () {
-               vm.logFood(food, mealType, double.tryParse(controller.text) ?? 1.0);
-               close(context, null);
-               Navigator.pop(ctx);
+               final qty = double.tryParse(controller.text) ?? 1.0;
+               Navigator.pop(ctx); // Close dialog first to prevent context issues
+               vm.logFood(food, mealType, qty);
+               close(context, null); // Then close search
             }, 
             child: const Text("LOG"),
           ),

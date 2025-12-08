@@ -41,18 +41,30 @@ class NutritionViewModel extends ChangeNotifier {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     
     final maps = await db.rawQuery('''
-      SELECT m.*, f.* 
+      SELECT 
+        m.id as log_id, m.date, m.meal_type, m.serving_multiplier,
+        f.id as food_id, f.name, f.kcal, f.protein, f.carbs, f.fats, f.serving_unit, f.serving_quantity, f.is_custom 
       FROM meal_logs m
       INNER JOIN foods f ON m.food_id = f.id
       WHERE m.date = ?
     ''', [today]);
     
     _todayLogs = maps.map((map) {
-      // Need to separate map into Food and Log manually because of name collisions if any, 
-      // but here we know column names.
-      final food = FoodItem.fromMap(map); // FoodItem constructor ignores unknown keys so this is safeish
+      final foodMap = {
+        'id': map['food_id'],
+        'name': map['name'],
+        'kcal': map['kcal'],
+        'protein': map['protein'],
+        'carbs': map['carbs'],
+        'fats': map['fats'],
+        'serving_unit': map['serving_unit'],
+        'serving_quantity': map['serving_quantity'],
+        'is_custom': map['is_custom']
+      };
+      
+      final food = FoodItem.fromMap(foodMap);
       return MealLog(
-        id: map['id'] as int,
+        id: map['log_id'] as int,
         date: map['date'] as String,
         mealType: map['meal_type'] as String,
         foodId: map['food_id'] as int,
@@ -112,11 +124,18 @@ class NutritionViewModel extends ChangeNotifier {
     return await db.insert('foods', food.toMap());
   }
 
+  bool _isSeeded = false;
+
   Future<void> seedIndianDatabase() async {
+    if (_isSeeded) return;
+
     final db = await _db.database;
     // Check if empty
     final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods'));
-    if ((count ?? 0) > 0) return;
+    if ((count ?? 0) > 0) {
+      _isSeeded = true;
+      return;
+    }
 
     // Seed Data
     final foods = [
@@ -145,5 +164,6 @@ class NutritionViewModel extends ChangeNotifier {
     for (var f in foods) {
       await db.insert('foods', f.toMap());
     }
+    _isSeeded = true;
   }
 }
