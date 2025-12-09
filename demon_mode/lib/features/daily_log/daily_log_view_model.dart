@@ -71,36 +71,47 @@ class DailyLogViewModel extends ChangeNotifier {
     
     double score = 0.0;
 
-    // 1. Workout (20%)
+    // 1. Workout (2.0)
     bool workoutDone = _currentLog!.workoutDone || _currentLog!.workouts.isNotEmpty;
     if (workoutDone) score += 2.0;
 
-    // 2. Meal / Nutrition (20%) - Check if user is fueling
+    // 2. Nutrition & Hydration (1.5)
     double calories = await _repository.getDailyCalories(_currentLog!.date);
-    if (calories >= 1800) {
-      score += 2.0;
-    } else if (calories >= 1000) {
-      score += 1.0;
-    }
+    bool nourished = calories >= 1800;
+    bool hydrated = _currentLog!.waterIntake >= 3000;
+    
+    if (nourished) score += 1.0;
+    if (hydrated) score += 0.5;
 
-    // 3. Task / Habits (20%)
+    // 3. Habits (2.0)
     if (_currentLog!.customHabits.isNotEmpty) {
       int completed = _currentLog!.customHabits.values.where((e) => e).length;
       score += (completed / _currentLog!.customHabits.length) * 2.0;
     } else {
+      // If no habits set, assume free points or encourage setting them? 
+      // Let's give points to not punish empty state, or maybe 0 to force user to set habits.
+      // Going with 2.0 to be "default good" until they fail a set habit.
       score += 2.0;
     }
 
-    // 4. Sleep (20%) - Target 7h
-    if (_currentLog!.sleepHours >= 7) {
-      score += 2.0;
-    } else if (_currentLog!.sleepHours >= 5) {
-      score += 1.0;
+    // 4. Sleep (1.5) - Target 8h+ (User Request)
+    if (_currentLog!.sleepHours >= 8) {
+      score += 1.5;
+    } else if (_currentLog!.sleepHours >= 6) {
+      score += 0.75;
     }
 
-    // 5. Hydration (20%) - Target 3000ml (3L)
-    double hydrationScore = (_currentLog!.waterIntake / 3000).clamp(0.0, 1.0) * 2.0;
-    score += hydrationScore;
+    // 5. Journaling (1.5)
+    if (_currentLog!.journalEntry != null && _currentLog!.journalEntry!.isNotEmpty) {
+      score += 1.5;
+    }
+
+    // 6. Supplements (1.5)
+    if (_currentLog!.supplements.isNotEmpty) {
+      score += 1.5;
+    }
+    
+    // Total max: 2 + 1.5 + 2 + 1.5 + 1.5 + 1.5 = 10.0
     
     _currentLog = _currentLog!.copyWith(demonScore: score);
     notifyListeners();

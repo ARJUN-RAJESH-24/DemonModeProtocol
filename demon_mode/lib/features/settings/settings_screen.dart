@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'settings_view_model.dart';
 import '../../core/theme/app_pallete.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -25,96 +26,24 @@ class _SettingsBody extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           
-          // Profile Section
-          const Text("DEMON PROFILE", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
+          // Theme Color Section
+          const Text("THEME COLOR", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Card(
             color: AppPallete.surfaceColor,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
+              child: Wrap(
+                spacing: 15,
+                runSpacing: 10,
                 children: [
-                   Row(
-                     children: [
-                       Expanded(child: _ProfileInput("Age", vm.age?.toString(), (v) => vm.updateProfile(a: int.tryParse(v)))),
-                       const SizedBox(width: 10),
-                       Expanded(child: DropdownButtonFormField<String>(
-                         value: vm.gender,
-                         dropdownColor: Colors.grey[900],
-                         decoration: const InputDecoration(labelText: "Gender", border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
-                         items: const [
-                           DropdownMenuItem(value: 'male', child: Text("Male")),
-                           DropdownMenuItem(value: 'female', child: Text("Female")),
-                         ],
-                         onChanged: (val) => vm.updateProfile(sex: val),
-                       )),
-                     ],
-                   ),
-                   const SizedBox(height: 10),
-                   Row(
-                     children: [
-                       Expanded(child: _ProfileInput("Height (cm)", vm.height?.toString(), (v) => vm.updateProfile(h: double.tryParse(v)))),
-                       const SizedBox(width: 10),
-                       Expanded(child: _ProfileInput("Weight (kg)", vm.weight?.toString(), (v) => vm.updateProfile(w: double.tryParse(v)))),
-                     ],
-                   ),
-                   const SizedBox(height: 10),
-                   DropdownButtonFormField<double>(
-                     value: vm.activityLevel,
-                     dropdownColor: Colors.grey[900],
-                     decoration: const InputDecoration(labelText: "Activity Level", border: OutlineInputBorder()),
-                     items: const [
-                       DropdownMenuItem(value: 1.2, child: Text("Sedentary (Office Job)")),
-                       DropdownMenuItem(value: 1.375, child: Text("Light Exercise (1-2 days)")),
-                       DropdownMenuItem(value: 1.55, child: Text("Moderate (3-5 days)")),
-                       DropdownMenuItem(value: 1.725, child: Text("Heavy (6-7 days)")),
-                     ],
-                     onChanged: (val) => vm.updateProfile(activity: val),
-                   ),
-                   const SizedBox(height: 10),
-                   DropdownButtonFormField<String>(
-                     value: vm.goal,
-                     dropdownColor: Colors.grey[900],
-                     decoration: const InputDecoration(labelText: "Current Protocol", border: OutlineInputBorder()),
-                     items: const [
-                       DropdownMenuItem(value: 'cut', child: Text("CUT (Deficit)")),
-                       DropdownMenuItem(value: 'maintain', child: Text("MAINTAIN")),
-                       DropdownMenuItem(value: 'bulk', child: Text("BULK (Surplus)")),
-                     ],
-                     onChanged: (val) => vm.updateProfile(g: val),
-                   ),
-                   const SizedBox(height: 20),
-                   // Calorie Override
-                   Row(
-                     children: [
-                        Expanded(
-                          child: TextFormField(
-                            initialValue: vm.calorieTargetOverride?.toString(),
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Override Calorie Target (Optional)",
-                              border: OutlineInputBorder(),
-                              hintText: "Leave empty to auto-calc"
-                            ),
-                            onChanged: (val) {
-                               if (val.isEmpty) {
-                                 vm.updateProfile(calOverride: -1);
-                               } else {
-                                 vm.updateProfile(calOverride: double.tryParse(val));
-                               }
-                            },
-                          ),
-                        ),
-                     ],
-                   ),
-                   const SizedBox(height: 10),
-                   if (vm.tdee != null)
-                     Container(
-                       padding: const EdgeInsets.all(8),
-                       width: double.infinity,
-                       decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                       child: Center(child: Text("DAILY TARGET: ${vm.tdee!.toInt()} KCAL", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent, fontSize: 16))),
-                     )
+                  _ColorSwatch(Colors.redAccent, vm),
+                  _ColorSwatch(const Color(0xFFFF0033), vm), // Neon Red
+                  _ColorSwatch(Colors.blueAccent, vm),
+                  _ColorSwatch(Colors.greenAccent, vm),
+                  _ColorSwatch(Colors.purpleAccent, vm),
+                  _ColorSwatch(Colors.orangeAccent, vm),
+                  _ColorSwatch(Colors.tealAccent, vm),
                 ],
               ),
             ),
@@ -213,21 +142,41 @@ class _SettingsBody extends StatelessWidget {
             title: const Text("Version"),
             subtitle: Text(vm.version),
           ),
+          const SizedBox(height: 20),
+          Center(
+            child: InkWell(
+              onTap: () async {
+                final uri = Uri.parse("https://github.com/ARJUN-RAJESH-24/DemonModeProtocol");
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              },
+              child: Column(
+                children: [
+                  const Text("Built by Arjun Rajesh", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text("github.com/ARJUN-RAJESH-24", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, decoration: TextDecoration.underline)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  Widget _ProfileInput(String label, String? val, Function(String) onChanged) {
-    return TextFormField(
-      initialValue: val,
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+  Widget _ColorSwatch(Color color, SettingsViewModel vm) {
+    bool isSelected = vm.accentColor.value == color.value;
+    return GestureDetector(
+      onTap: () => vm.setAccentColor(color),
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: isSelected ? Border.all(color: Colors.white, width: 3) : Border.all(color: Colors.transparent),
+          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 10)] : [],
+        ),
       ),
-      onChanged: onChanged,
     );
   }
 }

@@ -11,6 +11,7 @@ class FoodItem {
   final String servingUnit; // "g", "ml", "slice"
   final double servingQuantity; // e.g. 100g
   final bool isCustom;
+  final double caffeine; // mg
 
   FoodItem({
     this.id,
@@ -25,6 +26,7 @@ class FoodItem {
     required this.servingUnit,
     required this.servingQuantity,
     this.isCustom = false,
+    this.caffeine = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +43,7 @@ class FoodItem {
       'serving_unit': servingUnit,
       'serving_quantity': servingQuantity,
       'is_custom': isCustom ? 1 : 0,
+      'caffeine': caffeine,
     };
   }
 
@@ -58,6 +61,7 @@ class FoodItem {
       servingUnit: map['serving_unit'],
       servingQuantity: map['serving_quantity'],
       isCustom: map['is_custom'] == 1,
+      caffeine: map['caffeine'] ?? 0,
     );
   }
 }
@@ -84,4 +88,5 @@ class MealLog {
   double get totalProtein => (food?.protein ?? 0) * servingMultiplier;
   double get totalCarbs => (food?.carbs ?? 0) * servingMultiplier;
   double get totalFats => (food?.fats ?? 0) * servingMultiplier;
+  double get totalCaffeine => (food?.caffeine ?? 0) * servingMultiplier;
 }

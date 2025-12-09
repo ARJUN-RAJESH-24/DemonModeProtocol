@@ -27,14 +27,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onPageChanged: (index) => setState(() => _currentPage = index),
             children: [
               _buildPage(
-                title: "WELCOME TO\nTHE VOID",
-                content: "Demon Mode is not for the weak.\nIt is a protocol for total dominance.",
-                centerWidget: const Icon(Icons.local_fire_department, size: 100, color: AppPallete.primaryColor),
+                title: "WELCOME TO\nTHE PROTOCOL",
+                content: "Your goal is simple: Total Self-Mastery.\n\nWe track your Biology, Habits, and Mindset to calculate your daily Demon Score.",
+                centerWidget: Icon(Icons.shield, size: 100, color: Theme.of(context).primaryColor),
               ),
               _buildPage(
-                title: "THE PROTOCOL",
-                content: "We track everything.\n\n• Nutrition\n• Training\n• Sleep\n• Hydration\n• Mind",
-                centerWidget: const Icon(Icons.list_alt, size: 100, color: AppPallete.primaryColor),
+                title: "100% PRIVATE\nSECURE DATA",
+                content: "This app operates offline.\n\n• No Cloud Storage\n• No Data Tracking\n• Everything stays on this device.\n\nYour data is yours alone.",
+                centerWidget: const Icon(Icons.lock_outline, size: 100, color: Colors.greenAccent),
               ),
               _buildScorePage(),
               _buildPermissionsPage(),
@@ -59,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: _currentPage == 3 
               ? FloatingActionButton.extended(
                   onPressed: _finishOnboarding,
-                  backgroundColor: AppPallete.primaryColor,
+                  backgroundColor: Theme.of(context).primaryColor,
                   label: const Text("ENTER", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                   icon: const Icon(Icons.arrow_forward, color: Colors.black),
                 )
@@ -80,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: 8,
       width: _currentPage == index ? 24 : 8,
       decoration: BoxDecoration(
-        color: _currentPage == index ? AppPallete.primaryColor : Colors.white24,
+        color: _currentPage == index ? Theme.of(context).primaryColor : Colors.white24,
         borderRadius: BorderRadius.circular(4),
       ),
     );
@@ -108,21 +108,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text("DEMON SCORE", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2, color: AppPallete.primaryColor)),
+          Text("DEMON SCORE", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2, color: Theme.of(context).primaryColor)),
           const SizedBox(height: 30),
           Stack(
             alignment: Alignment.center,
             children: [
-              SizedBox(width: 200, height: 200, child: CircularProgressIndicator(value: 1.0, color: AppPallete.primaryColor.withOpacity(0.2), strokeWidth: 15)),
+              SizedBox(width: 200, height: 200, child: CircularProgressIndicator(value: 1.0, color: Theme.of(context).primaryColor.withOpacity(0.2), strokeWidth: 15)),
               const Text("10.0", style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 30),
           _buildScoreItem("Workout", "2.0 pts"),
-          _buildScoreItem("Nutrition", "2.0 pts"),
           _buildScoreItem("Habits", "2.0 pts"),
-          _buildScoreItem("Sleep", "2.0 pts"),
-          _buildScoreItem("Hydration", "2.0 pts"),
+          _buildScoreItem("Nutrition & Hydro", "1.5 pts"),
+          _buildScoreItem("Sleep (8h+)", "1.5 pts"),
+          _buildScoreItem("Journaling", "1.5 pts"),
+          _buildScoreItem("Supplements", "1.5 pts"),
           const SizedBox(height: 20),
           const Text("Max out every day.", style: TextStyle(color: Colors.grey)),
         ],
@@ -136,8 +137,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 16, color: Colors.white70)),
-          Text(points, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppPallete.primaryColor)),
+          Text(label, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+          Text(points, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
         ],
       ),
     );
@@ -153,13 +154,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 30),
           const Text("GRANT ACCESS", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 2)),
           const SizedBox(height: 20),
-          const Text("To track your progress, we need permissions.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+          const Text("To track your progress and secure data locally, we need permissions.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 40),
           _buildPermissionButton("Activity & Sensors", [Permission.activityRecognition, Permission.sensors]),
           const SizedBox(height: 10),
           _buildPermissionButton("Location (Workouts)", [Permission.location]),
           const SizedBox(height: 10),
-          _buildPermissionButton("Notification", [Permission.notification]),
+          _buildPermissionButton("Storage (Backup)", [Permission.storage, Permission.manageExternalStorage]), // Check permissions logic carefully
         ],
       ),
     );

@@ -23,6 +23,7 @@ class WorkoutViewModel extends ChangeNotifier {
   final List<String> workoutTypes = ['Gym', 'Run', 'Cycling', 'Calisthenics', 'Sports'];
 
   String get workoutType => _workoutType;
+  bool get isGymMode => _workoutType == 'Gym' || _workoutType == 'Calisthenics';
 
   // Gym State
   List<WorkoutExercise> _exercises = [];

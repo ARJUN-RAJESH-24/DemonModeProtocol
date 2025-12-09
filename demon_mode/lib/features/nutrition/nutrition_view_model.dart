@@ -4,6 +4,7 @@ import '../../data/models/food_model.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../settings/settings_view_model.dart';
+import '../body_metrics/body_metrics_view_model.dart';
 
 class NutritionViewModel extends ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
@@ -16,10 +17,13 @@ class NutritionViewModel extends ChangeNotifier {
   double _totalProtein = 0;
   double _totalCarbs = 0;
   double _totalFats = 0;
+  double _totalCaffeine = 0;
   
   // Targets (Hardcoded for now/User pref later)
   double targetKCal = 2500;
   double targetProtein = 180;
+  
+  BodyMetricsViewModel? _bodyMetrics;
   
   List<MealLog> get todayLogs => _todayLogs;
   List<FoodItem> get foodSearchResults => _foodSearchResults;
@@ -27,11 +31,26 @@ class NutritionViewModel extends ChangeNotifier {
   double get totalProtein => _totalProtein;
   double get totalCarbs => _totalCarbs;
   double get totalFats => _totalFats;
+  double get totalCaffeine => _totalCaffeine;
 
-  Future<void> init(SettingsViewModel settings) async {
+  String? get safetyWarning {
+    if (_bodyMetrics?.maxDailyCaffeine != null) {
+      if (_totalCaffeine > _bodyMetrics!.maxDailyCaffeine!) {
+        return "CRITICAL: Caffeine limit exceeded (${_totalCaffeine.toInt()}mg / ${_bodyMetrics!.maxDailyCaffeine!.toInt()}mg)";
+      }
+    } else {
+       if (_totalCaffeine > 400) {
+         return "WARNING: High caffeine intake (${_totalCaffeine.toInt()}mg)";
+       }
+    }
+    return null;
+  }
+
+  Future<void> init(BodyMetricsViewModel bodyMetrics) async {
+    _bodyMetrics = bodyMetrics;
     // Update targets based on settings
-    if (settings.tdee != null) {
-      targetKCal = settings.tdee!;
+    if (bodyMetrics.tdee != null) {
+      targetKCal = bodyMetrics.tdee!;
     }
     await fetchTodayLogs();
   }
@@ -43,7 +62,7 @@ class NutritionViewModel extends ChangeNotifier {
     final maps = await db.rawQuery('''
       SELECT 
         m.id as log_id, m.date, m.meal_type, m.serving_multiplier,
-        f.id as food_id, f.name, f.kcal, f.protein, f.carbs, f.fats, f.serving_unit, f.serving_quantity, f.is_custom 
+        f.id as food_id, f.name, f.kcal, f.protein, f.carbs, f.fats, f.serving_unit, f.serving_quantity, f.is_custom, f.caffeine
       FROM meal_logs m
       INNER JOIN foods f ON m.food_id = f.id
       WHERE m.date = ?
@@ -59,7 +78,8 @@ class NutritionViewModel extends ChangeNotifier {
         'fats': map['fats'],
         'serving_unit': map['serving_unit'],
         'serving_quantity': map['serving_quantity'],
-        'is_custom': map['is_custom']
+        'is_custom': map['is_custom'],
+        'caffeine': map['caffeine']
       };
       
       final food = FoodItem.fromMap(foodMap);
@@ -82,12 +102,14 @@ class NutritionViewModel extends ChangeNotifier {
     _totalProtein = 0;
     _totalCarbs = 0;
     _totalFats = 0;
+    _totalCaffeine = 0;
     
     for (var log in _todayLogs) {
       _totalKCal += log.totalKCal;
       _totalProtein += log.totalProtein;
       _totalCarbs += log.totalCarbs;
       _totalFats += log.totalFats;
+      _totalCaffeine += log.totalCaffeine;
     }
   }
 

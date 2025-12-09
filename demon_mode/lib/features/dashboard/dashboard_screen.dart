@@ -72,6 +72,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Safety Warning Banner
+            if (nutVm.safetyWarning != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.redAccent)
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, color: Colors.redAccent),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(nutVm.safetyWarning!, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))),
+                  ],
+                ),
+              ),
+
             // Streak Banner
             if (vm.streak > 0)
               Container(
@@ -132,14 +152,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                        children: [
                          const Text("MOOD & FOCUS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
-                         Text("${userLog.moodScore}%", style: const TextStyle(fontWeight: FontWeight.bold, color: AppPallete.primaryColor)),
+                         Text("${userLog.moodScore}%", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
                        ],
                      ),
                      Slider(
                        value: userLog.moodScore.toDouble(),
                        min: 0, 
                        max: 100,
-                       activeColor: AppPallete.primaryColor,
+                       activeColor: Theme.of(context).primaryColor,
                        inactiveColor: Colors.white10,
                        onChanged: (val) {
                           logVm.updateMoodScore(val.toInt());
@@ -170,8 +190,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                        children: [
                          Container(
                            padding: const EdgeInsets.all(10),
-                           decoration: BoxDecoration(color: AppPallete.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                           child: const Icon(Icons.directions_walk, color: AppPallete.primaryColor, size: 24),
+                           decoration: BoxDecoration(color: Theme.of(context).primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                           child: Icon(Icons.directions_walk, color: Theme.of(context).primaryColor, size: 24),
                          ),
                          const SizedBox(width: 15),
                          Column(
@@ -192,7 +212,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                            child: CircularProgressIndicator(
                              value: (vm.steps / 10000).clamp(0.0, 1.0),
                              backgroundColor: Colors.white10,
-                             color: AppPallete.primaryColor,
+                             color: Theme.of(context).primaryColor,
                            ),
                          ),
                          const SizedBox(height: 4),
@@ -238,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                        borderRadius: BorderRadius.circular(4),
                        child: LinearProgressIndicator(
                          value: nutVm.targetKCal > 0 ? (nutVm.totalKCal / nutVm.targetKCal).clamp(0.0, 1.0) : 0,
-                         color: AppPallete.primaryColor,
+                         color: Theme.of(context).primaryColor,
                          backgroundColor: Colors.white10,
                          minHeight: 6,
                        ),
@@ -256,9 +276,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 20),
             
             // "Demon Protocol" Checklist
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Text("NON-NEGOTIABLES", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: AppPallete.primaryColor)),
+              child: Text("NON-NEGOTIABLES", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Theme.of(context).primaryColor)),
             ),
             const SizedBox(height: 10),
             
@@ -275,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                      subtitle: const Text("Recovery Basis", style: TextStyle(fontSize: 10, color: Colors.grey)),
                      secondary: const Icon(Icons.bed, color: Colors.deepPurpleAccent),
                      value: userLog.sleepHours >= 7,
-                     activeColor: AppPallete.primaryColor,
+                     activeColor: Theme.of(context).primaryColor,
                      onChanged: (val) {
                         logVm.updateSleep(val ? 8.0 : 6.0);
                      },
@@ -290,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                            title: Text(habit, style: const TextStyle(fontWeight: FontWeight.bold)),
                            secondary: const Icon(Icons.check_circle_outline, color: Colors.grey),
                            value: isDone,
-                           activeColor: AppPallete.primaryColor,
+                           activeColor: Theme.of(context).primaryColor,
                            onChanged: (val) {
                              HapticFeedback.lightImpact();
                              logVm.toggleCustomHabit(habit, val);
@@ -355,7 +375,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Color _getScoreColor(double score) {
-    if (score >= 8) return AppPallete.primaryColor;
+    if (score >= 8) return Theme.of(context).primaryColor;
     if (score >= 5) return Colors.orange;
     return Colors.grey;
   }

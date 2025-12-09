@@ -19,35 +19,70 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final showOnboarding = !prefs.containsKey('onboarding_complete');
 
-  runApp(
+    runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsViewModel()),
-        ChangeNotifierProxyProvider<SettingsViewModel, NutritionViewModel>(
+        ChangeNotifierProvider(create: (_) => BodyMetricsViewModel()),
+        ChangeNotifierProxyProvider<BodyMetricsViewModel, NutritionViewModel>(
           create: (_) => NutritionViewModel(),
-          update: (_, settings, nutrition) => nutrition!..init(settings),
+          update: (_, bodyMetrics, nutrition) => nutrition!..init(bodyMetrics),
         ),
         ChangeNotifierProvider(create: (_) => WorkoutViewModel()),
         ChangeNotifierProvider(create: (_) => DailyLogViewModel()),
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
-        ChangeNotifierProvider(create: (_) => BodyMetricsViewModel()),
       ],
-      child: DemonModeApp(showOnboarding: showOnboarding),
+      child: const DemonModeApp(),
     ),
   );
 }
 
 class DemonModeApp extends StatelessWidget {
-  final bool showOnboarding;
-  const DemonModeApp({super.key, required this.showOnboarding});
+  const DemonModeApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Demon Mode',
-      theme: AppTheme.darkTheme,
-      home: showOnboarding ? const OnboardingScreen() : const MainScreen(),
+    return Consumer<SettingsViewModel>(
+      builder: (context, settings, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Demon Mode',
+          theme: AppTheme.getTheme(settings.accentColor),
+          home: const _AppLoader(), 
+        );
+      },
     );
+  }
+}
+
+class _AppLoader extends StatefulWidget {
+  const _AppLoader();
+  @override
+  State<_AppLoader> createState() => _AppLoaderState();
+}
+
+class _AppLoaderState extends State<_AppLoader> {
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+  
+  Future<void> _load() async {
+    // Determine onboarding state after provider init? 
+    // Or just check prefs here directly.
+    final prefs = await SharedPreferences.getInstance();
+    final showOnboarding = !prefs.containsKey('onboarding_complete');
+    
+    if (mounted) {
+       Navigator.of(context).pushReplacement(
+         MaterialPageRoute(builder: (_) => showOnboarding ? const OnboardingScreen() : const MainScreen())
+       );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

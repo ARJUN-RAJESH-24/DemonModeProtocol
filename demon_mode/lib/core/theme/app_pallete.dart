@@ -10,19 +10,42 @@ class AppPallete {
   static const Color greyColor = Colors.grey;
 }
 class AppTheme {
-  static final darkTheme = ThemeData.dark().copyWith(
-    scaffoldBackgroundColor: AppPallete.backgroundColor,
-    primaryColor: AppPallete.primaryColor,
-    colorScheme: const ColorScheme.dark(
-      primary: AppPallete.primaryColor,
-      surface: AppPallete.surfaceColor,
-      background: AppPallete.backgroundColor,
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppPallete.backgroundColor,
-      elevation: 0,
-      centerTitle: true,
-      titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 1.5, color: Colors.white),
-    ),
-  );
+  static ThemeData getTheme(Color primaryColor) {
+    return ThemeData.dark().copyWith(
+      scaffoldBackgroundColor: AppPallete.backgroundColor,
+      primaryColor: primaryColor,
+      colorScheme: ColorScheme.dark(
+        primary: primaryColor,
+        surface: AppPallete.surfaceColor,
+        background: AppPallete.backgroundColor,
+        secondary: primaryColor,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppPallete.backgroundColor,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 1.5, color: Colors.white),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) return primaryColor;
+          return Colors.grey;
+        }),
+        trackColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) return primaryColor.withOpacity(0.5);
+          return null;
+        }),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+      ),
+    );
+  }
 }

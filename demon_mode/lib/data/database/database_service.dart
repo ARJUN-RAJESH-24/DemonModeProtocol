@@ -25,42 +25,38 @@ class DatabaseService {
     try {
       return await openDatabase(
         path,
-        version: 7,
+        version: 8,
         password: password,
         onCreate: _createDB,
         onUpgrade: (db, oldVersion, newVersion) async {
           if (oldVersion < 2) {
-            try {
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN custom_habits TEXT");
-            } catch (_) {}
+             try { await db.execute("ALTER TABLE daily_logs ADD COLUMN custom_habits TEXT"); } catch (_) {}
           }
           if (oldVersion < 3) {
-            // Version 3: Full V2.0 Schema
-            await _createV2Tables(db);
+             await _createV2Tables(db);
           }
           if (oldVersion < 4) {
-             try {
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN workout_details TEXT");
-            } catch (_) {}
+             try { await db.execute("ALTER TABLE daily_logs ADD COLUMN workout_details TEXT"); } catch (_) {}
           }
-           if (oldVersion < 5) {
-             try {
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN sleep_hours REAL DEFAULT 0");
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN demon_score REAL DEFAULT 0");
-            } catch (_) {}
+          if (oldVersion < 5) {
+             try { 
+               await db.execute("ALTER TABLE daily_logs ADD COLUMN sleep_hours REAL DEFAULT 0");
+               await db.execute("ALTER TABLE daily_logs ADD COLUMN demon_score REAL DEFAULT 0"); 
+             } catch (_) {}
           }
-           if (oldVersion < 6) {
+          if (oldVersion < 6) {
              try {
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN coffee_intake INTEGER DEFAULT 0");
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN mood_score INTEGER DEFAULT 50");
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN journal_entry TEXT");
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN supplements TEXT");
-            } catch (_) {}
+               await db.execute("ALTER TABLE daily_logs ADD COLUMN coffee_intake INTEGER DEFAULT 0");
+               await db.execute("ALTER TABLE daily_logs ADD COLUMN mood_score INTEGER DEFAULT 50");
+               await db.execute("ALTER TABLE daily_logs ADD COLUMN journal_entry TEXT");
+               await db.execute("ALTER TABLE daily_logs ADD COLUMN supplements TEXT");
+             } catch (_) {}
           }
-           if (oldVersion < 7) {
-             try {
-              await db.execute("ALTER TABLE daily_logs ADD COLUMN steps INTEGER DEFAULT 0");
-            } catch (_) {}
+          if (oldVersion < 7) {
+             try { await db.execute("ALTER TABLE daily_logs ADD COLUMN steps INTEGER DEFAULT 0"); } catch (_) {}
+          }
+          if (oldVersion < 8) {
+             try { await db.execute("ALTER TABLE foods ADD COLUMN caffeine REAL DEFAULT 0"); } catch (_) {}
           }
         },
       );
@@ -70,7 +66,7 @@ class DatabaseService {
       await deleteDatabase(path);
       return await openDatabase(
         path,
-        version: 7,
+        version: 8,
         password: password,
         onCreate: _createDB,
         onUpgrade: (_, __, ___) {},
@@ -142,7 +138,8 @@ class DatabaseService {
         sodium $realType,
         serving_unit $textType,
         serving_quantity $realType,
-        is_custom $boolType
+        is_custom $boolType,
+        caffeine $realType DEFAULT 0
       )
     ''');
 

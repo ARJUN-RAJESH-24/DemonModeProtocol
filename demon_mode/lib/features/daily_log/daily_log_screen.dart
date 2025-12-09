@@ -33,7 +33,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     final log = vm.currentLog;
 
     if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppPallete.primaryColor));
+      return const Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor));
     }
 
     if (log == null) {
@@ -103,7 +103,32 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   Row(
                     children: [
                       IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateWater(-250); }, icon: const Icon(Icons.remove_circle_outline)),
-                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateWater(250); }, icon: const Icon(Icons.add_circle, color: AppPallete.primaryColor, size: 32)),
+                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateWater(250); }, icon: const Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 32)),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+
+            // Coffee Section (New)
+            _buildSectionHeader("Caffeine"),
+            GlassActionCard(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("${log.coffeeIntake} cups", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const Text("Limit: 400mg", style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateCoffee(-1); }, icon: const Icon(Icons.remove_circle_outline)),
+                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateCoffee(1); }, icon: const Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 32)), // Keeping explicit AppPallete here for now, will replace in bulk or use context
                     ],
                   )
                 ],
@@ -119,7 +144,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 title: const Text("Workout Completed?", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 subtitle: const Text("Mark if you trained today"),
                 value: log.workoutDone,
-                activeThumbColor: AppPallete.primaryColor,
+                activeThumbColor: Theme.of(context).primaryColor,
                 onChanged: (_) { HapticFeedback.mediumImpact(); vm.toggleWorkout(); },
               ),
             ),
@@ -135,7 +160,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   child: CheckboxListTile(
                     title: Text(habit, style: const TextStyle(fontWeight: FontWeight.bold)),
                     value: log.customHabits[habit] ?? false,
-                    activeColor: AppPallete.primaryColor,
+                    activeColor: Theme.of(context).primaryColor,
                     onChanged: (val) { 
                       HapticFeedback.lightImpact(); 
                       vm.toggleCustomHabit(habit, val ?? false); 
@@ -161,13 +186,13 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text("${nvm.totalKCal.toInt()} / ${nvm.targetKCal.toInt()} kcal", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                  Text("${(nvm.totalKCal / nvm.targetKCal * 100).clamp(0, 100).toStringAsFixed(0)}%", style: const TextStyle(color: AppPallete.primaryColor)),
+                                  Text("${(nvm.totalKCal / nvm.targetKCal * 100).clamp(0, 100).toStringAsFixed(0)}%", style: const TextStyle(color: Theme.of(context).primaryColor)),
                                 ],
                               ),
                               const SizedBox(height: 10),
                               LinearProgressIndicator(
                                 value: (nvm.totalKCal / (nvm.targetKCal == 0 ? 1 : nvm.targetKCal)).clamp(0.0, 1.0),
-                                color: AppPallete.primaryColor,
+                                color: Theme.of(context).primaryColor,
                                 backgroundColor: Colors.white10,
                               ),
                               const SizedBox(height: 10),

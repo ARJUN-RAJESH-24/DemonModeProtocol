@@ -40,18 +40,10 @@ class _WorkoutBody extends StatelessWidget {
       appBar: AppBar(
         title: const Text('DEMON MODE // TRAIN'),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () { 
-              // Settings or configure workout type
-            },
-          )
-        ],
       ),
       floatingActionButton: vm.isWorkingOut ? FloatingActionButton(
         onPressed: () => _showAddSetDialog(context, vm),
-        backgroundColor: AppPallete.primaryColor,
+        backgroundColor: Theme.of(context).primaryColor,
         child: const Icon(Icons.add, color: Colors.black),
       ) : null,
       body: SafeArea(
@@ -59,7 +51,7 @@ class _WorkoutBody extends StatelessWidget {
           children: [
             // 1. TIMER SECTION (Top 35%)
             SizedBox(
-              height: size.height * 0.35,
+              height: size.height * 0.28,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -80,7 +72,7 @@ class _WorkoutBody extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: secProgress,
                       strokeWidth: 15,
-                      color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.grey,
+                      color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.grey,
                       strokeCap: StrokeCap.round,
                     ),
                   ),
@@ -95,7 +87,7 @@ class _WorkoutBody extends StatelessWidget {
                       Text(
                         vm.isWorkingOut ? "ACTIVE" : "READY",
                         style: TextStyle(
-                            color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.grey, 
+                            color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.grey, 
                             letterSpacing: 4, 
                             fontWeight: FontWeight.bold
                         ),
@@ -106,7 +98,52 @@ class _WorkoutBody extends StatelessWidget {
               ),
             ),
 
-            // 2. METRICS ROW (Compact)
+            // 2. MODE TOGGLE & METRICS
+            Container(
+               margin: const EdgeInsets.symmetric(horizontal: 20),
+               padding: const EdgeInsets.all(4),
+               decoration: BoxDecoration(
+                 color: Colors.black45,
+                 borderRadius: BorderRadius.circular(30),
+                 border: Border.all(color: Colors.white10)
+               ),
+               child: Row(
+                 children: [
+                   Expanded(
+                     child: GestureDetector(
+                       onTap: () => vm.setWorkoutType('Gym'),
+                       child: Container(
+                         padding: const EdgeInsets.symmetric(vertical: 10),
+                         decoration: BoxDecoration(
+                           color: vm.isGymMode ? Theme.of(context).primaryColor : Colors.transparent,
+                           borderRadius: BorderRadius.circular(25)
+                         ),
+                         alignment: Alignment.center,
+                         child: Text("GYM / LIFTS", style: TextStyle(fontWeight: FontWeight.bold, color: vm.isGymMode ? Colors.black : Colors.grey)),
+                       ),
+                     ),
+                   ),
+                   Expanded(
+                     child: GestureDetector(
+                       onTap: () => vm.setWorkoutType('Run'),
+                       child: Container(
+                         padding: const EdgeInsets.symmetric(vertical: 10),
+                         decoration: BoxDecoration(
+                           color: !vm.isGymMode ? Theme.of(context).primaryColor : Colors.transparent,
+                           borderRadius: BorderRadius.circular(25)
+                         ),
+                         alignment: Alignment.center,
+                         child: Text("CARDIO / RUN", style: TextStyle(fontWeight: FontWeight.bold, color: !vm.isGymMode ? Colors.black : Colors.grey)),
+                       ),
+                     ),
+                   ),
+                 ],
+               ),
+            ),
+            
+            const SizedBox(height: 15),
+
+            if (!vm.isGymMode)
             SizedBox(
               height: 100,
               child: ListView(
@@ -123,6 +160,33 @@ class _WorkoutBody extends StatelessWidget {
                 ],
               ),
             ),
+             
+            if (vm.isGymMode)
+               Container(
+                 margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                 padding: const EdgeInsets.all(16),
+                 decoration: BoxDecoration(
+                   color: AppPallete.surfaceColor,
+                   borderRadius: BorderRadius.circular(16)
+                 ),
+                 child: Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                   children: [
+                      Column(
+                        children: [
+                          const Text("SETS", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text("${vm.exercises.fold(0, (p, e) => p + e.sets.length)}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          const Text("VOLUME", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text("${vm.exercises.fold(0, (p, e) => p + e.sets.fold(0, (p2, s) => p2 + (s.weight * s.reps).toInt()))} kg", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                   ],
+                 ),
+               ),
             
             const SizedBox(height: 20),
 
@@ -174,7 +238,7 @@ class _WorkoutBody extends StatelessWidget {
                                       ),
                                       Text(
                                         "${e.sets.last.weight}kg x ${e.sets.last.reps}",
-                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppPallete.primaryColor),
+                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                                       ),
                                    ],
                                  ),
@@ -203,18 +267,18 @@ class _WorkoutBody extends StatelessWidget {
                               width: 70,
                               height: 70,
                               decoration: BoxDecoration(
-                                color: vm.isWorkingOut ? Colors.transparent : AppPallete.primaryColor,
+                                color: vm.isWorkingOut ? Colors.transparent : Theme.of(context).primaryColor,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: AppPallete.primaryColor, width: 2),
+                                border: Border.all(color: Theme.of(context).primaryColor, width: 2),
                                 boxShadow: [
                                   if (!vm.isWorkingOut)
-                                    const BoxShadow(color: AppPallete.primaryColor, blurRadius: 15)
+                                    BoxShadow(color: Theme.of(context).primaryColor, blurRadius: 15)
                                 ]
                               ),
                               child: Icon(
                                 vm.isWorkingOut ? Icons.pause : Icons.play_arrow, 
                                 size: 35, 
-                                color: vm.isWorkingOut ? AppPallete.primaryColor : Colors.black
+                                color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.black
                               ),
                             ),
                           ),
@@ -259,7 +323,7 @@ class _WorkoutBody extends StatelessWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL", style: TextStyle(color: Colors.grey))),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppPallete.primaryColor),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
             onPressed: () {
               if (nameController.text.isNotEmpty && repsController.text.isNotEmpty) {
                  vm.logSet(
@@ -297,7 +361,7 @@ class _MetricChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppPallete.primaryColor),
+          Icon(icon, size: 16, color: Theme.of(context).primaryColor),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'nutrition_view_model.dart';
 import '../../core/theme/app_pallete.dart';
 import '../../data/models/food_model.dart';
-import '../settings/settings_view_model.dart';
 
 class NutritionPage extends StatefulWidget {
   const NutritionPage({super.key});
@@ -18,8 +17,7 @@ class _NutritionPageState extends State<NutritionPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = context.read<NutritionViewModel>();
-      final settings = context.read<SettingsViewModel>();
-      vm.init(settings);
+      vm.fetchTodayLogs();
       vm.seedIndianDatabase();
     });
   }

@@ -24,6 +24,11 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("BODY METRICS")),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showUpdateModal(context, vm),
+        icon: const Icon(Icons.add),
+        label: const Text("UPDATE METRICS"),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -32,73 +37,28 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [Colors.blueAccent.withOpacity(0.2), AppPallete.surfaceColor], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: LinearGradient(
+                   colors: [Theme.of(context).primaryColor.withOpacity(0.2), AppPallete.surfaceColor], 
+                   begin: Alignment.topLeft, 
+                   end: Alignment.bottomRight
+                ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: Colors.white10),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                   _StatItem("BMI", vm.bmi?.toStringAsFixed(1) ?? "--"),
-                   _StatItem("BODY FAT", vm.bodyFat != null ? "${vm.bodyFat!.toStringAsFixed(1)}%" : "--"),
-                   _StatItem("TDEE", vm.tdee?.toStringAsFixed(0) ?? "--"),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 30),
-            
-            // Input Form
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppPallete.surfaceColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   const Row(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Icon(Icons.edit, color: Colors.blueAccent, size: 20),
-                      SizedBox(width: 8),
-                      Text("UPDATE STATS", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                       _StatItem("BMI", vm.bmi?.toStringAsFixed(1) ?? "--"),
+                       _StatItem("BODY FAT", vm.bodyFat != null ? "${vm.bodyFat!.toStringAsFixed(1)}%" : "--"),
+                       _StatItem("TDEE", vm.tdee?.toStringAsFixed(0) ?? "--"),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(child: _Input("Weight (kg)", (v) => vm.weight = double.tryParse(v), vm.weight?.toString())),
-                      const SizedBox(width: 16),
-                      Expanded(child: _Input("Height (cm)", (v) => vm.heightCm = double.tryParse(v), vm.heightCm?.toString())),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _Input("Waist (cm)", (v) => vm.waist = double.tryParse(v), vm.waist?.toString())),
-                      const SizedBox(width: 16),
-                      Expanded(child: _Input("Neck (cm)", (v) => vm.neck = double.tryParse(v), vm.neck?.toString())),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                         vm.calculateAll();
-                         vm.saveLog();
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Metrics Saved")));
-                      },
-                      child: const Text("CALCULATE & SAVE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                  )
+                  const Divider(color: Colors.white10),
+                  const SizedBox(height: 10),
+                   _StatItemSmall("MAX CAFFEINE", vm.maxDailyCaffeine != null ? "${vm.maxDailyCaffeine!.toInt()}mg" : "--"),
                 ],
               ),
             ),
@@ -123,7 +83,6 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                 color: AppPallete.surfaceColor.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(24),
               ),
-              // Use a gradient chart
               child: LineChart(
                 LineChartData(
                   gridData: FlGridData(
@@ -135,7 +94,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                      show: true,
                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                     leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), // Hide Y axis numbers for clean look? Or keep them? Let's hide to be minimal.
+                     leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
@@ -145,17 +104,17 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                          return FlSpot(e.key.toDouble(), e.value['weight'] as double);
                       }).toList(),
                       isCurved: true,
-                      color: Colors.blueAccent,
+                      color: Theme.of(context).primaryColor,
                       barWidth: 4,
                       isStrokeCapRound: true,
                       dotData: FlDotData(
                         show: true,
-                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 4, color: Colors.blueAccent, strokeWidth: 2, strokeColor: Colors.black),
+                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 4, color: Theme.of(context).primaryColor, strokeWidth: 2, strokeColor: Colors.black),
                       ),
                       belowBarData: BarAreaData(
                         show: true,
                         gradient: LinearGradient(
-                          colors: [Colors.blueAccent.withOpacity(0.3), Colors.transparent],
+                          colors: [Theme.of(context).primaryColor.withOpacity(0.3), Colors.transparent],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -174,10 +133,138 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
   Widget _StatItem(String label, String val) {
     return Column(
       children: [
-        Text(val, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.0)),
-        const SizedBox(height: 4),
+        Text(val, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.0)),
+        const SizedBox(height: 5),
         Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ],
+    );
+  }
+  
+  Widget _StatItemSmall(String label, String val) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text("$label: ", style: TextStyle(color: Colors.grey[400], fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(val, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
+      ],
+    );
+  }
+
+  void _showUpdateModal(BuildContext context, BodyMetricsViewModel vm) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppPallete.surfaceColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, top: 20, left: 20, right: 20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("UPDATE METRICS", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+              const SizedBox(height: 20),
+              
+              const Text("Body Stats", style: TextStyle(color: Colors.grey, fontSize: 12)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _Input("Weight (kg)", (v) => vm.weight = double.tryParse(v), vm.weight?.toString())),
+                  const SizedBox(width: 10),
+                  Expanded(child: _Input("Height (cm)", (v) => vm.heightCm = double.tryParse(v), vm.heightCm?.toString())),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _Input("Waist (cm)", (v) => vm.waist = double.tryParse(v), vm.waist?.toString())),
+                  const SizedBox(width: 10),
+                  Expanded(child: _Input("Neck (cm)", (v) => vm.neck = double.tryParse(v), vm.neck?.toString())),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
+              const Divider(color: Colors.white10),
+              const SizedBox(height: 10),
+              const Text("Profile (Factors into TDEE)", style: TextStyle(color: Colors.grey, fontSize: 12)),
+              const SizedBox(height: 10),
+              
+              Row(
+                children: [
+                   Expanded(child: _Input("Age", (v) => vm.age = int.tryParse(v), vm.age?.toString())),
+                   const SizedBox(width: 10),
+                   Expanded(
+                     child: DropdownButtonFormField<bool>(
+                       value: vm.isMale,
+                       dropdownColor: Colors.grey[900],
+                       decoration: _inputDeco("Gender"),
+                       items: const [
+                         DropdownMenuItem(value: true, child: Text("Male")),
+                         DropdownMenuItem(value: false, child: Text("Female")),
+                       ],
+                       onChanged: (val) { if(val!=null) vm.isMale = val; },
+                     ),
+                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                 value: vm.goal,
+                 dropdownColor: Colors.grey[900],
+                 decoration: _inputDeco("Goal"),
+                 items: const [
+                   DropdownMenuItem(value: 'cut', child: Text("CUT (Deficit)")),
+                   DropdownMenuItem(value: 'maintain', child: Text("MAINTAIN")),
+                   DropdownMenuItem(value: 'bulk', child: Text("BULK (Surplus)")),
+                 ],
+                 onChanged: (val) { if(val!=null) vm.goal = val; },
+              ),
+               const SizedBox(height: 10),
+               DropdownButtonFormField<String>(
+                 value: vm.activityLevel,
+                 dropdownColor: Colors.grey[900],
+                 decoration: _inputDeco("Activity"),
+                 items: const [
+                    DropdownMenuItem(value: 'Sedentary', child: Text("Sedentary (1.2)")),
+                    DropdownMenuItem(value: 'Light', child: Text("Light (1.375)")),
+                    DropdownMenuItem(value: 'Moderate', child: Text("Moderate (1.55)")),
+                    DropdownMenuItem(value: 'Active', child: Text("Active (1.725)")),
+                    DropdownMenuItem(value: 'Very Active', child: Text("Very Active (1.9)")),
+                 ],
+                 onChanged: (val) { if(val!=null) vm.activityLevel = val; },
+              ),
+              
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Update main profile values in shared prefs via updateProfile wrapper if we had one that took all args,
+                    // or just direct set since we have vm vars publicly mutable and we call updateProfile individually.
+                    // Actually BodyMetricsViewModel.updateProfile saves to prefs. But here we are setting fields directly?
+                    // We need to call updateProfile to persist the "Profile" bits.
+                    // The "Stats" bits (weight/waist) are persisted via saveLog().
+                    
+                    vm.updateProfile(
+                      a: vm.age,
+                      h: vm.heightCm,
+                      male: vm.isMale,
+                      act: vm.activityLevel,
+                      g: vm.goal
+                    );
+                    vm.saveLog(); // Saves weight history
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Metrics & Profile Updated")));
+                  },
+                  child: const Text("SAVE CHANGES"),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -185,16 +272,19 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
     return TextFormField(
       initialValue: initVal,
       keyboardType: TextInputType.number,
-      style: const TextStyle(fontWeight: FontWeight.bold),
-      decoration: InputDecoration(
+      decoration: _inputDeco(label),
+      onChanged: onChanged,
+    );
+  }
+  
+  InputDecoration _inputDeco(String label) {
+    return InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: Colors.black12,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      onChanged: onChanged,
-    );
+      );
   }
 }
