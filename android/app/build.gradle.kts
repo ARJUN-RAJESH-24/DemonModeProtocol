@@ -16,7 +16,7 @@ android {
         applicationId = "com.example.demon_mode"
 
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34
 
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -25,14 +25,17 @@ android {
     }
 
     // Java/Kotlin modernization
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
+    
+
 
     buildTypes {
         release {
@@ -65,4 +68,8 @@ flutter {
 
 dependencies {
     implementation(project(":spotify-app-remote"))
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-Xlint:-options")
 }

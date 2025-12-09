@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/services.dart';
-import '../../data/repositories/daily_log_repository.dart';
+
 import '../../core/theme/app_pallete.dart';
 import 'dashboard_view_model.dart';
 import '../settings/settings_screen.dart';
