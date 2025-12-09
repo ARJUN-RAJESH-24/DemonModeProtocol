@@ -1,80 +1,93 @@
-# 🩸 Demon Mode Protocol
+# Demon Mode Protocol
 
-**“Extreme Self-Discipline. Unmatched Focus. Total Control.”**
+> *"Hard things, done daily."*
 
-This is the official mobile app for the **Demon Mode Protocol** — a high-performance, no-compromise lifestyle system. Built with Flutter, this app helps you log, track, and dominate your physical, mental, and spiritual transformation.
-
----
-
-## ⚡ Features
-
-- 📅 **Daily Logs**  
-  Track meals, workouts, hydration, sleep, and more — all in one place.
-
-- 🧠 **Demon Score System**  
-  Quantify your discipline. Score based on running, workouts, hydration, fasting, and recovery.
-
-- ⏱️ **Protocols & Reminders**  
-  Stay locked in with scheduled check-ins, water reminders, and custom alerts.
-
-- 🔥 **Streaks & Progress Visuals**  
-  Real-time tracking of your fat-loss challenge and accountability metrics.
-
-- 👹 **Brutal UI for a Brutal Mindset**  
-  Clean, powerful design. No fluff. Just performance.
+**Demon Mode Protocol** is a high-performance productivity and fitness ecosystem designed to force discipline and track progress. Built with **Flutter** and **Dart**, it combines fitness tracking, habit formation, and rigorous productivity tools into a unified "Demon Mode" experience.
 
 ---
 
-## 🛠️ Built With
+## Key Features
 
-- **Flutter** – Frontend + Cross-platform support (Android/iOS/Web)
-- **Dart** – Lightning-fast logic and null-safe programming
-- **Firebase / SQLite** *(coming soon)* – For persistent data and syncing
+### 1. **Daily Transformation Log**
+*   **Accountability Tracking:** Log your daily water intake, mood, and workout completions.
+*   **Custom Habits:** Define your own non-negotiables (e.g., "Creatine", "Reading", "Deep Work") in Settings and track them daily.
+*   **History View:** Review your past performance using the integrated calendar view.
+*   **Photo Evidence:** Capture daily body check photos to visualize your transformation over time.
+
+### 2. **Gym Mode (Workout Recorder)**
+*   **Session Tracking:** Real-time workout timer and duration tracking.
+*   **Set Logging:** Log exercises with Weight, Reps, and Sets. Automatically groups sets by exercise.
+*   **Spotify Integration:** Control your music (Play/Pause/Skip) directly from the workout screen without leaving the app.
+*   **GPS Tracking:** Tracks distance and pace for outdoor runs (beta).
+
+### 3. **Zen Mode**
+*   **Distraction Blocking:** A minimalist interface designed to lock you into flow state.
+*   **Timer:** Dedicated focus timer for deep work sessions.
+
+### 4. **Device Integration**
+*   **Heart Rate Monitoring:** Connects to Bluetooth Low Energy (BLE) heart rate monitors (filtered by Service UUID `0x180D`) to display live BPM during workouts.
 
 ---
 
-## 🚀 Getting Started
+## Technical Stack
+
+*   **Framework:** Flutter (Dark Mode first architecture)
+*   **State Management:** Provider pattern (Global ViewModels)
+*   **Database:** SQLite (`sqflite` with `sqlcipher` for security)
+*   **Storage:** `shared_preferences` & `flutter_secure_storage`
+*   **Music:** `spotify_sdk` (Custom Android App Remote integration)
+*   **Design:** Custom "Glassmorphism" UI components (`GlassActionCard`)
+
+---
+
+## Setup & Installation
 
 ### Prerequisites
+*   Flutter SDK (3.x+)
+*   Android SDK / Studio
+*   A Spotify Premium account (for Music control)
+*   Spotify App installed on the device
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install)
-- Android Studio / VS Code
-- Git
-
-### Run Locally
-
+### 1. Clone & Dependencies
 ```bash
-git clone https://github.com/ARJUN-RAJESH-24/DemonModeProtocol.git
-cd DemonModeProtocol
+git clone https://github.com/your-repo/demon-mode.git
+cd demon_mode
 flutter pub get
+```
+
+### 2. Spotify SDK Setup (Crucial)
+This project requires the Spotify Android App Remote SDK, which is not available via standard Maven repositories. We have automated this process.
+
+**Run the setup script (Windows):**
+```powershell
+./tools/setup_spotify_sdk.ps1
+```
+*This script will download the SDK, extract the AAR, and configure the local Gradle module.*
+
+### 3. Build & Run
+Connect your Android device (Developer Mode enabled) and run:
+```bash
 flutter run
 ```
 
 ---
 
-## 📸 Screenshots *(coming soon)*
+## Screenshots
 
-> "This isn’t for the weak. This is war — against your lesser self."
-
----
-
-## 🧠 Inspiration
-
-This app is part of a greater personal mission:  
-To master the body, mind, and spirit through **discipline, suffering, and rebirth**.  
-Every feature is built for one purpose — to **track and improve the process of becoming unstoppable**.
+| | | |
+|:---:|:---:|:---:|
+| <img src="Screenshots/IMG-20251209-WA0001.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0002.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0003.jpg" width="200"> |
+| <img src="Screenshots/IMG-20251209-WA0004.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0005.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0006.jpg" width="200"> |
+| <img src="Screenshots/IMG-20251209-WA0007.jpg" width="200"> | | |
 
 ---
 
-## 📌 Project Status
+## Troubleshooting
 
-🟢 Actively being developed by [@ARJUN-RAJESH-24](https://github.com/ARJUN-RAJESH-24)  
-🔜 More features and UI upgrades incoming.
+*   **"Log loading forever":** If the database key gets corrupted (common on Android re-installs due to Auto Backup), the app tries to self-heal. Restart the app completely.
+*   **"Spotify connection failed":** Ensure the Spotify app is open in the background and you are logged in.
+*   **"Build failed":** Run `flutter clean` and ensure the `setup_spotify_sdk.ps1` script ran successfully.
 
 ---
 
-## 🦾 License
-
-MIT License. Use, modify, and dominate.
-
-```
+**Demon Mode Protocol** — *Outwork your doubts.*
