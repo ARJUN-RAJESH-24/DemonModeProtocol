@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../data/models/daily_log_model.dart';
 import '../../data/repositories/daily_log_repository.dart';
@@ -136,9 +137,35 @@ class DailyLogViewModel extends ChangeNotifier {
     await _save();
   }
 
+  Timer? _stepSaveTimer;
+
+  Future<void> updateSteps(int steps) async {
+    if (_currentLog == null) return;
+    
+    // Immediate local update for UI responsiveness
+    // Only update if steps have increased to avoid race conditions with old values
+    if (steps > _currentLog!.steps) {
+      _currentLog = _currentLog!.copyWith(steps: steps);
+      notifyListeners();
+      
+      _debounceSaveSteps();
+    }
+  }
+
+  void _debounceSaveSteps() {
+    if (_stepSaveTimer?.isActive ?? false) _stepSaveTimer!.cancel();
+    _stepSaveTimer = Timer(const Duration(seconds: 10), () => _save());
+  }
+
   Future<void> _save() async {
     if (_currentLog != null) {
       await _repository.saveLog(_currentLog!);
     }
+  }
+
+  @override
+  void dispose() {
+    _stepSaveTimer?.cancel();
+    super.dispose();
   }
 }

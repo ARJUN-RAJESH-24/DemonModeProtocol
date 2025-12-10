@@ -16,7 +16,7 @@ import '../expert_hub/expert_hub_screen.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../daily_log/demon_habits_screen.dart';
 import '../workout/workout_screen.dart';
-import 'panic_mode_screen.dart'; // Import Panic Mode
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -355,24 +355,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             
             const SizedBox(height: 40),
 
-            // Panic Button (Secret Mode)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (_) => const PanicModeScreen()));
-                },
-                icon: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
-                label: const Text("EMERGENCY DEMON ACTIVATION", style: TextStyle(color: Colors.redAccent, letterSpacing: 1.2)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  side: const BorderSide(color: Colors.redAccent, width: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
-                ),
-              ),
-            ),
+            const SizedBox(height: 80),
             
             const SizedBox(height: 80),
           ],

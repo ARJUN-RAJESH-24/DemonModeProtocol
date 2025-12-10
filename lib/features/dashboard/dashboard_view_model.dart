@@ -5,22 +5,32 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/daily_log_model.dart';
 import '../../data/repositories/daily_log_repository.dart';
+import '../daily_log/daily_log_view_model.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final DailyLogRepository _repository = DailyLogRepository();
+  DailyLogViewModel? _logViewModel;
   
   StreamSubscription<StepCount>? _stepSubscription;
   int _steps = 0;
   String _status = 'Stopped';
-  Timer? _saveTimer;
   
   // Chart Data
   List<DailyLogModel> _weeklyLogs = [];
 
-  int get steps => _steps;
+  int get steps => _logViewModel?.currentLog?.steps ?? _steps;
   String get status => _status;
   List<DailyLogModel> get weeklyLogs => _weeklyLogs;
   DailyLogModel? get todayLog => _weeklyLogs.isNotEmpty ? _weeklyLogs.last : null;
+
+  void updateLogViewModel(DailyLogViewModel vm) {
+    _logViewModel = vm;
+    // Sync local steps with log VM if available
+    if (_logViewModel?.currentLog != null) {
+      _steps = _logViewModel!.currentLog!.steps;
+    }
+    notifyListeners();
+  }
 
   Future<void> init() async {
     await _checkPermissions();
@@ -59,31 +69,17 @@ class DashboardViewModel extends ChangeNotifier {
     if (delta > 0) {
       _steps += delta;
       
+      // Update DailyLogViewModel which handles saving and source of truth
+      if (_logViewModel != null) {
+         _logViewModel!.updateSteps(_steps);
+      }
+      
       // Update UI state immediately
       if (_weeklyLogs.isNotEmpty && _isToday(_weeklyLogs.last.date)) {
         _weeklyLogs.last = _weeklyLogs.last.copyWith(steps: _steps);
       }
       
       notifyListeners();
-      _debounceSave();
-    }
-  }
-
-  void _debounceSave() {
-    if (_saveTimer?.isActive ?? false) _saveTimer!.cancel();
-    _saveTimer = Timer(const Duration(seconds: 10), _saveStepsToDB);
-  }
-
-  Future<void> _saveStepsToDB() async {
-    try {
-      final today = DateTime.now();
-      // Fetch fresh to avoid overwriting other fields
-      final log = await _repository.getLogForDate(today);
-      if (log.steps != _steps) {
-        await _repository.saveLog(log.copyWith(steps: _steps));
-      }
-    } catch (e) {
-      debugPrint("Error saving steps: $e");
     }
   }
 
@@ -121,13 +117,6 @@ class DashboardViewModel extends ChangeNotifier {
 
     _weeklyLogs = recentLogs.take(7).toList().reversed.toList();
     
-    // Initialize current steps from today's log if available
-    if (_weeklyLogs.isNotEmpty && _isToday(_weeklyLogs.last.date)) {
-      _steps = _weeklyLogs.last.steps;
-    } else {
-      _steps = 0;
-    }
-    
     notifyListeners();
   }
 
@@ -139,7 +128,6 @@ class DashboardViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _stepSubscription?.cancel();
-    _saveTimer?.cancel();
     super.dispose();
   }
   // Quotes

@@ -31,7 +31,10 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => WorkoutViewModel()),
         ChangeNotifierProvider(create: (_) => DailyLogViewModel()),
-        ChangeNotifierProvider(create: (_) => DashboardViewModel()),
+        ChangeNotifierProxyProvider<DailyLogViewModel, DashboardViewModel>(
+          create: (_) => DashboardViewModel(),
+          update: (_, logVm, dashboardVm) => dashboardVm!..updateLogViewModel(logVm),
+        ),
       ],
       child: const DemonModeApp(),
     ),
