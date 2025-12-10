@@ -8,6 +8,7 @@ import 'widgets/glass_action_card.dart';
 import '../settings/settings_view_model.dart';
 import '../nutrition/nutrition_view_model.dart';
 import '../workout/workout_view_model.dart';
+import 'log_history_screen.dart';
 
 class DailyLogScreen extends StatefulWidget {
   const DailyLogScreen({super.key});
@@ -60,6 +61,13 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
            style: const TextStyle(fontSize: 16),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month), // Calendar shaped history button
+            tooltip: "View History",
+            onPressed: () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const LogHistoryScreen()));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () async {
@@ -274,7 +282,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.file(File(log.photoPaths[index]), height: 120, width: 90, fit: BoxFit.cover),
+                              child: Image.file(File(log.photoPaths[index]), height: 120, width: 90, fit: BoxFit.cover, cacheWidth: 400),
                             ),
                           );
                         },

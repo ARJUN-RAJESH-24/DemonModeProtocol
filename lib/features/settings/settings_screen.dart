@@ -161,6 +161,7 @@ class _SettingsBody extends StatelessWidget {
               child: Column(
                 children: [
                   const Text("Built by Arjun Rajesh", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                  const Text("for the bold and strong", style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
                   const SizedBox(height: 4),
                   Text("github.com/ARJUN-RAJESH-24", style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 12, decoration: TextDecoration.underline)),
                 ],

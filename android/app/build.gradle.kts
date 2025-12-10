@@ -41,8 +41,12 @@ android {
         release {
             // Replace with your release keystore later
             signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         debug {
             signingConfig = signingConfigs.getByName("debug")
@@ -66,9 +70,6 @@ flutter {
     source = "../.."
 }
 
-dependencies {
-    implementation(project(":spotify-app-remote"))
-}
 
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Xlint:-options")

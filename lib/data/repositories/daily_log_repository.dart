@@ -72,5 +72,28 @@ class DailyLogRepository {
     }
     return 0.0;
   }
+
+  Future<List<Map<String, dynamic>>> getMealsForDate(DateTime date) async {
+    final db = await _dbService.database;
+    final dateStr = date.toIso8601String().split('T')[0];
+    
+    return await db.rawQuery('''
+      SELECT m.*, f.name as food_name, f.kcal, f.protein, f.carbs, f.fats 
+      FROM meal_logs m
+      JOIN foods f ON m.food_id = f.id
+      WHERE m.date = ?
+    ''', [dateStr]);
+  }
+
+  Future<List<Map<String, dynamic>>> getBodyMetricsForDate(DateTime date) async {
+    final db = await _dbService.database;
+    final dateStr = date.toIso8601String().split('T')[0];
+    
+    return await db.query(
+      'body_metrics',
+      where: 'date = ?',
+      whereArgs: [dateStr],
+    );
+  }
 }
 

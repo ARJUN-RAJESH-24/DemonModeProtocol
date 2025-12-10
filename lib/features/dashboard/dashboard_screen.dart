@@ -16,6 +16,7 @@ import '../expert_hub/expert_hub_screen.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../daily_log/demon_habits_screen.dart';
 import '../workout/workout_screen.dart';
+import '../daily_log/log_history_screen.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -58,7 +59,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
         actions: [
-           IconButton(
+          IconButton(
+             icon: const Icon(Icons.calendar_month),
+             tooltip: 'History',
+             onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LogHistoryScreen()));
+             },
+          ),
+          IconButton(
             icon: const Icon(Icons.accessibility_new), 
             onPressed: () {
                Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen()));

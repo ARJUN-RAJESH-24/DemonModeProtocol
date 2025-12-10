@@ -9,6 +9,7 @@ import 'features/settings/settings_view_model.dart';
 import 'features/nutrition/nutrition_view_model.dart';
 import 'features/workout/workout_view_model.dart';
 import 'features/daily_log/daily_log_view_model.dart';
+import 'features/daily_log/history_view_model.dart';
 import 'features/dashboard/dashboard_view_model.dart';
 import 'features/body_metrics/body_metrics_view_model.dart';
 
@@ -35,6 +36,7 @@ void main() async {
           create: (_) => DashboardViewModel(),
           update: (_, logVm, dashboardVm) => dashboardVm!..updateLogViewModel(logVm),
         ),
+        ChangeNotifierProvider(create: (_) => HistoryViewModel()),
       ],
       child: const DemonModeApp(),
     ),

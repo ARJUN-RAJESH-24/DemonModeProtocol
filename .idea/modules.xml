@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/demon_mode.iml" filepath="$PROJECT_DIR$/.idea/demon_mode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/demon_mode_android.iml" filepath="$PROJECT_DIR$/android/demon_mode_android.iml" />
     </modules>
   </component>
 </project>
