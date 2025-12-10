@@ -64,6 +64,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyMetricsScreen()));
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.self_improvement),
+            tooltip: 'Zen Mode',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ZenModeScreen()));
+            },
+          ),
         ],
       ),
       body: userLog == null 
@@ -122,7 +129,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: CircularProgressIndicator(
                     value: userLog.demonScore / 10.0,
                     strokeWidth: 20,
-                    backgroundColor: Colors.white10,
+                    backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12,
                     color: _getScoreColor(userLog.demonScore),
                     strokeCap: StrokeCap.round,
                   ),
@@ -160,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                        min: 0, 
                        max: 100,
                        activeColor: Theme.of(context).primaryColor,
-                       inactiveColor: Colors.white10,
+                       inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12,
                        onChanged: (val) {
                           logVm.updateMoodScore(val.toInt());
                        },
@@ -211,7 +218,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                            width: 40,
                            child: CircularProgressIndicator(
                              value: (vm.steps / 10000).clamp(0.0, 1.0),
-                             backgroundColor: Colors.white10,
+                             backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12,
                              color: Theme.of(context).primaryColor,
                            ),
                          ),
@@ -284,7 +291,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             
             Container(
               decoration: BoxDecoration(
-                color: AppPallete.surfaceColor,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16)
               ),
               child: Column(
@@ -300,7 +307,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         logVm.updateSleep(val ? 8.0 : 6.0);
                      },
                    ),
-                   const Divider(color: Colors.white10),
+                   Divider(color: Theme.of(context).dividerColor),
                    // Dynamic Habits
                    ...habits.map((habit) {
                      final isDone = logHabits[habit] ?? false;
@@ -316,7 +323,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                              logVm.toggleCustomHabit(habit, val);
                            },
                          ),
-                         if (habit != habits.last) const Divider(color: Colors.white10),
+                         if (habit != habits.last) Divider(color: Theme.of(context).dividerColor),
                        ],
                      );
                    }).toList(),
@@ -332,14 +339,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                  padding: const EdgeInsets.all(16),
                  child: Column(
                    children: [
-                     const Icon(Icons.format_quote, color: Colors.white54),
+                     Icon(Icons.format_quote, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5) ?? Colors.grey),
                      Text(
-                       '"Discipline is doing what you hate to do, but doing it like you love it."',
+                       '"${vm.randomQuote}"',
                        textAlign: TextAlign.center,
-                       style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white70),
+                       style: TextStyle(fontStyle: FontStyle.italic, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
                      ),
                      const SizedBox(height: 5),
-                     const Text("- M. Tyson", style: TextStyle(fontSize: 10, color: Colors.grey))
+                     // const Text("- M. Tyson", style: TextStyle(fontSize: 10, color: Colors.grey))
                    ],
                  ),
                ),

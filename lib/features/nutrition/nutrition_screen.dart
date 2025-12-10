@@ -42,7 +42,7 @@ class _NutritionPageState extends State<NutritionPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppPallete.surfaceColor,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -309,10 +309,7 @@ class FoodSearchDelegate extends SearchDelegate {
   ThemeData appBarTheme(BuildContext context) {
     return Theme.of(context).copyWith(
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
-      ),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: InputBorder.none,
+        // backgroundColor: Colors.black, // removed to adhere to theme
       ),
     );
   }

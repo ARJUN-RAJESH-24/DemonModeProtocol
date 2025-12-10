@@ -19,12 +19,14 @@ class SettingsViewModel extends ChangeNotifier {
   List<String> _habits = [];
   String _unitSystem = 'metric';
   Color _accentColor = AppPallete.primaryColor;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   bool get biometricsEnabled => _biometricsEnabled;
   String get version => _version;
   List<String> get habits => _habits;
   String get unitSystem => _unitSystem;
   Color get accentColor => _accentColor;
+  ThemeMode get themeMode => _themeMode;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -41,6 +43,20 @@ class SettingsViewModel extends ChangeNotifier {
     if (colorVal != null) {
       _accentColor = Color(colorVal);
     }
+    
+    // Load Theme Mode
+    final modeStr = prefs.getString('theme_mode');
+    if (modeStr != null) {
+      _themeMode = modeStr == 'light' ? ThemeMode.light : ThemeMode.dark;
+    }
+    
+    notifyListeners();
+  }
+
+  Future<void> toggleTheme(bool isLight) async {
+    _themeMode = isLight ? ThemeMode.light : ThemeMode.dark;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_mode', isLight ? 'light' : 'dark');
     notifyListeners();
   }
 

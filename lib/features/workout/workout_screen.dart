@@ -49,52 +49,54 @@ class _WorkoutBody extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. TIMER SECTION (Top 35%)
-            SizedBox(
-              height: size.height * 0.28,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Base Ring
-                  SizedBox(
-                    width: 220,
-                    height: 220,
-                    child: CircularProgressIndicator(
-                      value: 1.0,
-                      strokeWidth: 15,
-                      color: AppPallete.surfaceColor,
-                    ),
-                  ),
-                  // Active Ring
-                  SizedBox(
-                    width: 220,
-                    height: 220,
-                    child: CircularProgressIndicator(
-                      value: secProgress,
-                      strokeWidth: 15,
-                      color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.grey,
-                      strokeCap: StrokeCap.round,
-                    ),
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _formatTime(vm.seconds),
-                        style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold, fontFamily: 'monospace', letterSpacing: -2),
+            // 1. TIMER SECTION (Flexible instead of fixed height)
+            Expanded(
+              flex: 4,
+              child: Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Base Ring
+                    SizedBox(
+                      width: 220,
+                      height: 220,
+                      child: CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 15,
+                        color: Theme.of(context).dividerColor,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        vm.isWorkingOut ? "ACTIVE" : "READY",
-                        style: TextStyle(
-                            color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.grey, 
-                            letterSpacing: 4, 
-                            fontWeight: FontWeight.bold
+                    ),
+                    // Active Ring
+                    SizedBox(
+                      width: 220,
+                      height: 220,
+                      child: CircularProgressIndicator(
+                        value: secProgress,
+                        strokeWidth: 15,
+                        color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.grey,
+                        strokeCap: StrokeCap.round,
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _formatTime(vm.seconds),
+                          style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold, fontFamily: 'monospace', letterSpacing: -2),
                         ),
-                      )
-                    ],
-                  ),
-                ],
+                        const SizedBox(height: 10),
+                        Text(
+                          vm.isWorkingOut ? "ACTIVE" : "READY",
+                          style: TextStyle(
+                              color: vm.isWorkingOut ? Theme.of(context).primaryColor : Colors.grey, 
+                              letterSpacing: 4, 
+                              fontWeight: FontWeight.bold
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -103,9 +105,9 @@ class _WorkoutBody extends StatelessWidget {
                margin: const EdgeInsets.symmetric(horizontal: 20),
                padding: const EdgeInsets.all(4),
                decoration: BoxDecoration(
-                 color: Colors.black45,
+                 color: Theme.of(context).cardColor,
                  borderRadius: BorderRadius.circular(30),
-                 border: Border.all(color: Colors.white10)
+                 border: Border.all(color: Theme.of(context).dividerColor)
                ),
                child: Row(
                  children: [
@@ -166,7 +168,7 @@ class _WorkoutBody extends StatelessWidget {
                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                  padding: const EdgeInsets.all(16),
                  decoration: BoxDecoration(
-                   color: AppPallete.surfaceColor,
+                   color: Theme.of(context).cardColor,
                    borderRadius: BorderRadius.circular(16)
                  ),
                  child: Row(
@@ -192,9 +194,10 @@ class _WorkoutBody extends StatelessWidget {
 
             // 3. LOGS & CONTROLS (Expanded Bottom Panel)
             Expanded(
+              flex: 5,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppPallete.surfaceColor,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
                   boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, -5))]
                 ),
@@ -222,37 +225,51 @@ class _WorkoutBody extends StatelessWidget {
                                return Container(
                                  padding: const EdgeInsets.all(12),
                                  decoration: BoxDecoration(
-                                   color: Colors.black26, 
+                                   color: Theme.of(context).cardColor.withOpacity(0.5), 
                                    borderRadius: BorderRadius.circular(12),
-                                   border: Border.all(color: Colors.white10)
+                                   border: Border.all(color: Theme.of(context).dividerColor)
                                  ),
                                  child: Row(
-                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(e.name, style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                                            Text("${e.type} • ${e.sets.length} Sets", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                          ],
+                                        ),
+                                      ),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
-                                          Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                                          Text("${e.sets.length} Sets", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                          Text(
+                                            "${e.sets.isNotEmpty ? e.sets.last.weight : 0}kg",
+                                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                                          ),
+                                          Text(
+                                            "x ${e.sets.isNotEmpty ? e.sets.last.reps : 0}",
+                                            style: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                                          ),
                                         ],
                                       ),
-                                      Text(
-                                        "${e.sets.last.weight}kg x ${e.sets.last.reps}",
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
-                                      ),
+                                      IconButton(
+                                        onPressed: () => vm.removeExercise(i),
+                                        icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                                      )
                                    ],
                                  ),
                                );
                              }
                            ),
-                    ),
+                     ),
 
                     // Controls Area
                     Container(
                       padding: const EdgeInsets.all(24),
-                      decoration: const BoxDecoration(
-                        color: Colors.black26,
-                        border: Border(top: BorderSide(color: Colors.white10))
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        border: Border(top: BorderSide(color: Theme.of(context).dividerColor))
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -297,46 +314,68 @@ class _WorkoutBody extends StatelessWidget {
 
   void _showAddSetDialog(BuildContext context, WorkoutViewModel vm) {
     final nameController = TextEditingController();
+    final setsController = TextEditingController(text: "1");
     final repsController = TextEditingController();
     final weightController = TextEditingController();
+    String selectedType = "Gym";
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppPallete.surfaceColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("LOG SET", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Exercise Name", filled: true, fillColor: Colors.black12)),
-            const SizedBox(height: 10),
-            Row(
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text("LOG EXERCISE", style: TextStyle(fontWeight: FontWeight.bold)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(child: TextField(controller: repsController, decoration: const InputDecoration(labelText: "Reps", filled: true, fillColor: Colors.black12), keyboardType: TextInputType.number)),
-                const SizedBox(width: 10),
-                Expanded(child: TextField(controller: weightController, decoration: const InputDecoration(labelText: "Weight (kg)", filled: true, fillColor: Colors.black12), keyboardType: TextInputType.number)),
+                TextField(controller: nameController, decoration: InputDecoration(labelText: "Exercise Name", filled: true, fillColor: Theme.of(context).canvasColor)),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  dropdownColor: Theme.of(context).cardColor,
+                  items: [
+                    DropdownMenuItem(value: "Gym", child: Text("Gym / Strength", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                    DropdownMenuItem(value: "Cardio", child: Text("Cardio", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                    DropdownMenuItem(value: "Sport", child: Text("Sport", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                  ],
+                  onChanged: (val) => setState(() => selectedType = val!),
+                  decoration: const InputDecoration(filled: true, fillColor: Colors.black12, labelText: "Type"),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: TextField(controller: setsController, decoration: InputDecoration(labelText: "Sets", filled: true, fillColor: Theme.of(context).canvasColor), keyboardType: TextInputType.number)),
+                    const SizedBox(width: 5),
+                    Expanded(child: TextField(controller: repsController, decoration: InputDecoration(labelText: "Reps", filled: true, fillColor: Theme.of(context).canvasColor), keyboardType: TextInputType.number)),
+                    const SizedBox(width: 5),
+                    Expanded(child: TextField(controller: weightController, decoration: InputDecoration(labelText: "Kg", filled: true, fillColor: Theme.of(context).canvasColor), keyboardType: TextInputType.number)),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL", style: TextStyle(color: Colors.grey))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-            onPressed: () {
-              if (nameController.text.isNotEmpty && repsController.text.isNotEmpty) {
-                 vm.logSet(
-                   nameController.text.toUpperCase(), 
-                   int.tryParse(repsController.text) ?? 0, 
-                   double.tryParse(weightController.text) ?? 0.0
-                 );
-                 Navigator.pop(ctx);
-              }
-            },
-            child: const Text("SAVE SET", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-        ],
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCEL", style: TextStyle(color: Colors.grey))),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
+                onPressed: () {
+                  if (nameController.text.isNotEmpty && repsController.text.isNotEmpty) {
+                     vm.logExercise(
+                       nameController.text.toUpperCase(),
+                       selectedType,
+                       int.tryParse(setsController.text) ?? 1,
+                       int.tryParse(repsController.text) ?? 0, 
+                       double.tryParse(weightController.text) ?? 0.0
+                     );
+                     Navigator.pop(ctx);
+                  }
+                },
+                child: const Text("ADD", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        }
       ),
     );
   }
@@ -354,9 +393,9 @@ class _MetricChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppPallete.surfaceColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -33,7 +33,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     final log = vm.currentLog;
 
     if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor));
+      return Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor));
     }
 
     if (log == null) {
@@ -103,7 +103,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   Row(
                     children: [
                       IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateWater(-250); }, icon: const Icon(Icons.remove_circle_outline)),
-                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateWater(250); }, icon: const Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 32)),
+                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateWater(250); }, icon: Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 32)),
                     ],
                   )
                 ],
@@ -128,7 +128,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   Row(
                     children: [
                       IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateCoffee(-1); }, icon: const Icon(Icons.remove_circle_outline)),
-                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateCoffee(1); }, icon: const Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 32)), // Keeping explicit AppPallete here for now, will replace in bulk or use context
+                      IconButton(onPressed: () { HapticFeedback.selectionClick(); vm.updateCoffee(1); }, icon: Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 32)), // Keeping explicit AppPallete here for now, will replace in bulk or use context
                     ],
                   )
                 ],
@@ -186,7 +186,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text("${nvm.totalKCal.toInt()} / ${nvm.targetKCal.toInt()} kcal", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                  Text("${(nvm.totalKCal / nvm.targetKCal * 100).clamp(0, 100).toStringAsFixed(0)}%", style: const TextStyle(color: Theme.of(context).primaryColor)),
+                                  Text("${(nvm.totalKCal / nvm.targetKCal * 100).clamp(0, 100).toStringAsFixed(0)}%", style: TextStyle(color: Theme.of(context).primaryColor)),
                                 ],
                               ),
                               const SizedBox(height: 10),

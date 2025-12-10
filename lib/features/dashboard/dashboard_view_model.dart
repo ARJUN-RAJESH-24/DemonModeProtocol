@@ -110,11 +110,12 @@ class DashboardViewModel extends ChangeNotifier {
     
     // Determine streak
     for (var log in recentLogs) {
-        if (log.demonScore >= 4.0) {
+        if (log.demonScore >= 4.0 || log.workoutDone || log.customHabits.isNotEmpty) {
             _streak++;
         } else {
+            // Allow today to be incomplete without breaking streak if previous days were good
             if (log.date.day == today.day && _streak == 0) continue; 
-            break;
+            break; 
         }
     }
 
@@ -140,5 +141,21 @@ class DashboardViewModel extends ChangeNotifier {
     _stepSubscription?.cancel();
     _saveTimer?.cancel();
     super.dispose();
+  }
+  // Quotes
+  final List<String> _quotes = [
+    "Hard things, done daily.",
+    "Discipline is doing what you hate to do, but doing it like you love it. - Tyson",
+    "You don't decide your future. You decide your habits, and your habits decide your future.",
+    "The pain of discipline is far less than the pain of regret.",
+    "Outwork your doubts.",
+    "Your body can stand almost anything. It’s your mind that you have to convince.",
+    "Do something today that your future self will thank you for.",
+    "Comfort is the enemy of progress.",
+  ];
+  
+  String get randomQuote {
+    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
+    return _quotes[dayOfYear % _quotes.length];
   }
 }

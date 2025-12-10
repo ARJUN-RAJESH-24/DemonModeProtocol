@@ -68,7 +68,7 @@ class _ZenModeBodyState extends State<_ZenModeBody> with SingleTickerProviderSta
     final vm = context.watch<ZenModeViewModel>();
 
     return Scaffold(
-      backgroundColor: AppPallete.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text("ZEN MODE")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -86,8 +86,8 @@ class _ZenModeBodyState extends State<_ZenModeBody> with SingleTickerProviderSta
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppPallete.primaryColor.withOpacity(0.2),
-                        AppPallete.backgroundColor,
+                        Theme.of(context).primaryColor.withOpacity(0.2),
+                        Theme.of(context).scaffoldBackgroundColor,
                       ],
                       radius: _scaleAnimation.value * 0.5,
                     ),
@@ -99,11 +99,11 @@ class _ZenModeBodyState extends State<_ZenModeBody> with SingleTickerProviderSta
                   alignment: Alignment.center,
                   child: Text(
                     _breathingText,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
-                      color: AppPallete.secondaryColor,
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                 );
@@ -122,13 +122,13 @@ class _ZenModeBodyState extends State<_ZenModeBody> with SingleTickerProviderSta
                 ..selection = TextSelection.fromPosition(TextPosition(offset: vm.thoughts.length)),
               onChanged: (val) => vm.updateThoughts(val),
               maxLines: 8,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Theme.of(context).cardColor,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 hintText: "Write down what's on your mind...",
-                hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+                hintStyle: TextStyle(color: Theme.of(context).hintColor),
               ),
             ),
             const SizedBox(height: 20),

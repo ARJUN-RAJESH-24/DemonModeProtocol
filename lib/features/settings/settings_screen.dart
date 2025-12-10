@@ -49,6 +49,15 @@ class _SettingsBody extends StatelessWidget {
             ),
           ),
           
+          const SizedBox(height: 10),
+          SwitchListTile(
+            title: const Text("Light Mode"),
+             secondary: const Icon(Icons.wb_sunny, color: Colors.orange),
+             value: vm.themeMode == ThemeMode.light,
+             activeColor: AppPallete.primaryColor,
+             onChanged: (val) => vm.toggleTheme(val),
+          ),
+          
           const SizedBox(height: 20),
           const Text("CUSTOMIZATIONS", style: TextStyle(color: AppPallete.primaryColor, fontWeight: FontWeight.bold)),
           SwitchListTile(

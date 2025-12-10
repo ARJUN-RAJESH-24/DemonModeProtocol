@@ -9,84 +9,83 @@
 ## Key Features
 
 ### 1. **Daily Transformation Log**
-*   **Accountability Tracking:** Log your daily water intake, mood, and workout completions.
-*   **Custom Habits:** Define your own non-negotiables (e.g., "Creatine", "Reading", "Deep Work") in Settings and track them daily.
-*   **History View:** Review your past performance using the integrated calendar view.
-*   **Photo Evidence:** Capture daily body check photos to visualize your transformation over time.
 
-### 2. **Gym Mode (Workout Recorder)**
-*   **Session Tracking:** Real-time workout timer and duration tracking.
-*   **Set Logging:** Log exercises with Weight, Reps, and Sets. Automatically groups sets by exercise.
-*   **Spotify Integration:** Control your music (Play/Pause/Skip) directly from the workout screen without leaving the app.
-*   **GPS Tracking:** Tracks distance and pace for outdoor runs (beta).
+* **Accountability Tracking:** Log water intake (with quick add/remove buttons), mood, and sleep.
+* **Journal & Conquests:** Daily reflection prompts and a "Conquests" log to record small victories.
+* **Custom Habits:** Define non-negotiables (e.g., "Creatine", "Reading", "Deep Work") and track them daily.
+* **Physique Check:** Capture daily progress photos to visualize your physical transformation.
 
-### 3. **Zen Mode**
-*   **Distraction Blocking:** A minimalist interface designed to lock you into flow state.
-*   **Timer:** Dedicated focus timer for deep work sessions.
+### 2. **Gym Mode (War Room)**
 
-### 4. **Device Integration**
-*   **Heart Rate Monitoring:** Connects to Bluetooth Low Energy (BLE) heart rate monitors (filtered by Service UUID `0x180D`) to display live BPM during workouts.
+* **Session Tracking:** Real-time workout timer with "Active" and "Rest" states.
+* **Dual Modes:** Toggle between **Gym/Strength** (Sets, Reps, Weight) and **Cardio/Run** (Distance, Energy, Pace).
+* **Session Log:** Detailed history of every set performed during the session.
+* **Demon Score:** Earn points based on workout duration and intensity to level up your daily score.
+
+### 3. **Dashboard & Analytics**
+
+* **Live Metrics:** Real-time step counting and goal tracking (10k steps).
+* **Nutrition Summary:** At-a-glance view of Calories, Protein, Carbs, and Fats.
+* **Streak System:** Tracks consecutive days of logging to build momentum.
+* **Motivational Quotes:** Daily rotating stoic and high-performance quotes.
+
+### 4. **Zen Mode**
+
+* **Breathing Visualizer:** Guided 4-7-8 breathing exercises with visual cues.
+* **Thought Collection:** A distraction-free interface to "dump" thoughts and clear your mind.
+* **Theme Aware:** Works perfectly in both Light and Dark modes.
+
+### 5. **Expert Hub**
+
+* **Curated Knowledge:** Direct access to high-quality fitness content from trusted sources:
+  * **Athlean-X** (Science-based training)
+  * **Jeff Nippard** (Hypertrophy science)
+  * **MuscleBlaze** (Nutrition & Supplements)
 
 ---
 
 ## Technical Stack
 
-*   **Framework:** Flutter (Dark Mode first architecture)
-*   **State Management:** Provider pattern (Global ViewModels)
-*   **Database:** SQLite (`sqflite` with `sqlcipher` for security)
-*   **Storage:** `shared_preferences` & `flutter_secure_storage`
-*   **Music:** `spotify_sdk` (Custom Android App Remote integration)
-*   **Design:** Custom "Glassmorphism" UI components (`GlassActionCard`)
+* **Framework:** Flutter (3.x)
+* **State Management:** Provider pattern (Global ViewModels)
+* **Database:** SQLite (`sqflite`) for local persistence
+* **UI/UX:** Custom "Glassmorphism" components and dynamic **Light/Dark Theme** support.
+* **Sensors:** `pedometer` for step counting.
+* **Media:** `image_picker` for progress photos, `youtube_player_flutter` for Expert Hub.
 
 ---
 
 ## Setup & Installation
 
 ### Prerequisites
-*   Flutter SDK (3.x+)
-*   Android SDK / Studio
-*   A Spotify Premium account (for Music control)
-*   Spotify App installed on the device
+
+* Flutter SDK (3.x+)
+* Android SDK / Studio
 
 ### 1. Clone & Dependencies
+
 ```bash
 git clone https://github.com/your-repo/demon-mode.git
 cd demon_mode
 flutter pub get
 ```
 
-### 2. Spotify SDK Setup (Crucial)
-This project requires the Spotify Android App Remote SDK, which is not available via standard Maven repositories. We have automated this process.
+### 2. Build & Run
 
-**Run the setup script (Windows):**
-```powershell
-./tools/setup_spotify_sdk.ps1
-```
-*This script will download the SDK, extract the AAR, and configure the local Gradle module.*
-
-### 3. Build & Run
 Connect your Android device (Developer Mode enabled) and run:
+
 ```bash
 flutter run
 ```
 
----
-
-## Screenshots
-
-| | | |
-|:---:|:---:|:---:|
-| <img src="Screenshots/IMG-20251209-WA0001.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0002.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0003.jpg" width="200"> |
-| <img src="Screenshots/IMG-20251209-WA0004.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0005.jpg" width="200"> | <img src="Screenshots/IMG-20251209-WA0006.jpg" width="200"> |
-| <img src="Screenshots/IMG-20251209-WA0007.jpg" width="200"> | | |
+*Note: The app requests permissions for Activity Recognition (Steps), Camera, and Location on first launch. Please grant "Allow All".*
 
 ---
 
 ## Troubleshooting
 
-*   **"Log loading forever":** If the database key gets corrupted (common on Android re-installs due to Auto Backup), the app tries to self-heal. Restart the app completely.
-*   **"Spotify connection failed":** Ensure the Spotify app is open in the background and you are logged in.
-*   **"Build failed":** Run `flutter clean` and ensure the `setup_spotify_sdk.ps1` script ran successfully.
+* **"Steps not counting":** Ensure you have granted "Physical Activity" permissions. Steps may take a few seconds to sync from the OS sensor.
+* **"Database issues":** If the app crashes on launch after an update, try uninstalling the old version to clear the SQLite database, then reinstall.
 
 ---
 

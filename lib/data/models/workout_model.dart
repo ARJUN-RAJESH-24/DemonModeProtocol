@@ -13,17 +13,20 @@ class WorkoutSet {
 
 class WorkoutExercise {
   final String name;
+  final String type;
   final List<WorkoutSet> sets;
 
-  WorkoutExercise({required this.name, required this.sets});
+  WorkoutExercise({required this.name, this.type = 'Strength', required this.sets});
 
   Map<String, dynamic> toJson() => {
     'name': name,
+    'type': type,
     'sets': sets.map((s) => s.toJson()).toList(),
   };
 
   factory WorkoutExercise.fromJson(Map<String, dynamic> json) => WorkoutExercise(
     name: json['name'],
+    type: json['type'] ?? 'Strength',
     sets: (json['sets'] as List).map((s) => WorkoutSet.fromJson(s)).toList(),
   );
 }

@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/workout_model.dart';
 import '../../data/repositories/daily_log_repository.dart';
+import '../../core/logic/score_logic.dart';
 
 class WorkoutViewModel extends ChangeNotifier {
   // Timer State
@@ -83,16 +84,27 @@ class WorkoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void logSet(String exerciseName, int reps, double weight) {
+  void removeExercise(int index) {
+    if (index >= 0 && index < _exercises.length) {
+      _exercises.removeAt(index);
+      _saveState();
+      notifyListeners();
+    }
+  }
+
+  void logExercise(String exerciseName, String type, int setsCount, int reps, double weight) {
+    final newSets = List.generate(setsCount, (_) => WorkoutSet(reps: reps, weight: weight));
+    
     final existingIndex = _exercises.indexWhere((e) => e.name == exerciseName);
     if (existingIndex != -1) {
       // Add to existing
       final existing = _exercises[existingIndex];
-      final newSets = List<WorkoutSet>.from(existing.sets)..add(WorkoutSet(reps: reps, weight: weight));
-      _exercises[existingIndex] = WorkoutExercise(name: existing.name, sets: newSets);
+      // Update type if needed, append sets
+      final updatedSets = List<WorkoutSet>.from(existing.sets)..addAll(newSets);
+      _exercises[existingIndex] = WorkoutExercise(name: existing.name, type: type, sets: updatedSets);
     } else {
       // Create new
-      _exercises.add(WorkoutExercise(name: exerciseName, sets: [WorkoutSet(reps: reps, weight: weight)]));
+      _exercises.add(WorkoutExercise(name: exerciseName, type: type, sets: newSets));
     }
     _saveState();
     notifyListeners();
@@ -157,7 +169,11 @@ class WorkoutViewModel extends ChangeNotifier {
          workoutDone: true,
          workouts: [...today.workouts, session]
        );
-       await _logRepo.saveLog(updatedLog);
+       // Calculate Score
+       final score = await DemonScoreLogic.calculate(updatedLog);
+       final finalLog = updatedLog.copyWith(demonScore: score);
+       
+       await _logRepo.saveLog(finalLog);
     }
 
     // Clear local state

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
+import '../../core/logic/score_logic.dart';
 
 class DailyLogViewModel extends ChangeNotifier {
   final DailyLogRepository _repository = DailyLogRepository();
@@ -69,49 +70,7 @@ class DailyLogViewModel extends ChangeNotifier {
   Future<void> _calculateAndSaveScore() async {
     if (_currentLog == null) return;
     
-    double score = 0.0;
-
-    // 1. Workout (2.0)
-    bool workoutDone = _currentLog!.workoutDone || _currentLog!.workouts.isNotEmpty;
-    if (workoutDone) score += 2.0;
-
-    // 2. Nutrition & Hydration (1.5)
-    double calories = await _repository.getDailyCalories(_currentLog!.date);
-    bool nourished = calories >= 1800;
-    bool hydrated = _currentLog!.waterIntake >= 3000;
-    
-    if (nourished) score += 1.0;
-    if (hydrated) score += 0.5;
-
-    // 3. Habits (2.0)
-    if (_currentLog!.customHabits.isNotEmpty) {
-      int completed = _currentLog!.customHabits.values.where((e) => e).length;
-      score += (completed / _currentLog!.customHabits.length) * 2.0;
-    } else {
-      // If no habits set, assume free points or encourage setting them? 
-      // Let's give points to not punish empty state, or maybe 0 to force user to set habits.
-      // Going with 2.0 to be "default good" until they fail a set habit.
-      score += 2.0;
-    }
-
-    // 4. Sleep (1.5) - Target 8h+ (User Request)
-    if (_currentLog!.sleepHours >= 8) {
-      score += 1.5;
-    } else if (_currentLog!.sleepHours >= 6) {
-      score += 0.75;
-    }
-
-    // 5. Journaling (1.5)
-    if (_currentLog!.journalEntry != null && _currentLog!.journalEntry!.isNotEmpty) {
-      score += 1.5;
-    }
-
-    // 6. Supplements (1.5)
-    if (_currentLog!.supplements.isNotEmpty) {
-      score += 1.5;
-    }
-    
-    // Total max: 2 + 1.5 + 2 + 1.5 + 1.5 + 1.5 = 10.0
+    final score = await DemonScoreLogic.calculate(_currentLog!);
     
     _currentLog = _currentLog!.copyWith(demonScore: score);
     notifyListeners();

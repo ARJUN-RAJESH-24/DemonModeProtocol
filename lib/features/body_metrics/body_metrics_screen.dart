@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'body_metrics_view_model.dart';
+import '../daily_log/daily_log_view_model.dart';
+import '../../core/theme/app_pallete.dart';
 import '../../core/theme/app_pallete.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -38,12 +40,12 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                   colors: [Theme.of(context).primaryColor.withOpacity(0.2), AppPallete.surfaceColor], 
+                   colors: [Theme.of(context).primaryColor.withOpacity(0.2), Theme.of(context).cardColor], 
                    begin: Alignment.topLeft, 
                    end: Alignment.bottomRight
                 ),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               child: Column(
                 children: [
@@ -56,12 +58,37 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(color: Colors.white10),
+                  const Divider(),
                   const SizedBox(height: 10),
                    _StatItemSmall("MAX CAFFEINE", vm.maxDailyCaffeine != null ? "${vm.maxDailyCaffeine!.toInt()}mg" : "--"),
-                ],
+               ],
               ),
             ),
+            
+            const SizedBox(height: 15),
+            
+            // Photo Check Button
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                   Provider.of<DailyLogViewModel>(context, listen: false).addPhoto();
+                },
+                icon: const Icon(Icons.camera_alt),
+                label: const Text("DAILY PHYSIQUE CHECK"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).cardColor, 
+                  foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
+                  minimumSize: const Size(200, 50)
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 30),
+
+            
+            const SizedBox(height: 30),
+            
+            // History Chart
             
             const SizedBox(height: 30),
             
@@ -80,7 +107,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
               height: 250,
               padding: const EdgeInsets.fromLTRB(10, 20, 20, 10),
               decoration: BoxDecoration(
-                color: AppPallete.surfaceColor.withOpacity(0.5),
+                color: Theme.of(context).cardColor.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: LineChart(
@@ -88,7 +115,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                   gridData: FlGridData(
                      show: true, 
                      drawVerticalLine: false, 
-                     getDrawingHorizontalLine: (_) => const FlLine(color: Colors.white10, strokeWidth: 1)
+                     getDrawingHorizontalLine: (_) => FlLine(color: Theme.of(context).dividerColor, strokeWidth: 1)
                   ),
                   titlesData: const FlTitlesData(
                      show: true,
@@ -154,7 +181,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppPallete.surfaceColor,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, top: 20, left: 20, right: 20),
@@ -196,7 +223,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                    Expanded(
                      child: DropdownButtonFormField<bool>(
                        value: vm.isMale,
-                       dropdownColor: Colors.grey[900],
+                       dropdownColor: Theme.of(context).cardColor,
                        decoration: _inputDeco("Gender"),
                        items: const [
                          DropdownMenuItem(value: true, child: Text("Male")),
@@ -210,7 +237,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                  value: vm.goal,
-                 dropdownColor: Colors.grey[900],
+                 dropdownColor: Theme.of(context).cardColor,
                  decoration: _inputDeco("Goal"),
                  items: const [
                    DropdownMenuItem(value: 'cut', child: Text("CUT (Deficit)")),
@@ -222,7 +249,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                const SizedBox(height: 10),
                DropdownButtonFormField<String>(
                  value: vm.activityLevel,
-                 dropdownColor: Colors.grey[900],
+                 dropdownColor: Theme.of(context).cardColor,
                  decoration: _inputDeco("Activity"),
                  items: const [
                     DropdownMenuItem(value: 'Sedentary', child: Text("Sedentary (1.2)")),
@@ -282,7 +309,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
         filled: true,
-        fillColor: Colors.black12,
+        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.black12 : Colors.grey[200],
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       );

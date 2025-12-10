@@ -14,13 +14,13 @@ class _ExpertHubScreenState extends State<ExpertHubScreen> {
   
   // Base Data
   final List<Map<String, String>> _allVideos = [
-    {'id': 'vc1E5CfRfos', 'title': 'The Most Effective Way To Build Muscle', 'category': 'Hypertrophy'},
-    {'id': 'Pok0Jg2JAkE', 'title': 'How Much Protein Do You ACTUALLY Need?', 'category': 'Nutrition'},
-    {'id': '0o0k1XF9pX0', 'title': 'The Perfect Push Workout', 'category': 'Training'},
-    {'id': 'e1tB3z0r2hE', 'title': 'Stop Wasting Time in the Gym', 'category': 'Mistakes'},
-    {'id': '3v1d-1w1w1w', 'title': 'How to Cut Fat Without Losing Muscle', 'category': 'Fat Loss'}, // Mock
-    {'id': 'X_9V9i1', 'title': 'Scientific Glute Training', 'category': 'Hypertrophy'}, // Mock
-    {'id': 'Y_8U8u2', 'title': 'Creatine: Everything You Need to Know', 'category': 'Nutrition'}, // Mock
+    {'id': 'vc1E5CfRfos', 'title': 'The Most Effective Way To Build Muscle', 'category': 'Jeff Nippard'},
+    {'id': 'Pok0Jg2JAkE', 'title': 'How Much Protein Do You ACTUALLY Need?', 'category': 'Jeff Nippard'},
+    {'id': '0o0k1XF9pX0', 'title': 'The Perfect Push Workout', 'category': 'Athlean-X'},
+    {'id': 'e1tB3z0r2hE', 'title': 'Stop Wasting Time in the Gym', 'category': 'Athlean-X'},
+    {'id': '3v1d-1w1w1w', 'title': 'Best Supplements for Muscle Growth', 'category': 'MuscleBlaze'},
+    {'id': 'X_9V9i1', 'title': 'Creatine Monohydrate Explained', 'category': 'MuscleBlaze'},
+    {'id': 'Y_8U8u2', 'title': 'Science of Hypertrophy', 'category': 'Jeff Nippard'},
   ];
 
   List<Map<String, String>> _displayVideos = [];
@@ -77,7 +77,7 @@ class _ExpertHubScreenState extends State<ExpertHubScreen> {
       body: RefreshIndicator(
         onRefresh: _refreshContent,
         color: AppPallete.primaryColor,
-        backgroundColor: AppPallete.surfaceColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         child: ListView.builder(
           controller: _scrollController,
           padding: const EdgeInsets.all(16),
@@ -91,7 +91,7 @@ class _ExpertHubScreenState extends State<ExpertHubScreen> {
             
             final video = _displayVideos[index];
             return Card(
-              color: AppPallete.surfaceColor,
+              color: Theme.of(context).cardColor,
               margin: const EdgeInsets.only(bottom: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Column(
@@ -105,12 +105,12 @@ class _ExpertHubScreenState extends State<ExpertHubScreen> {
                         alignment: Alignment.center,
                         children: [
                            // Fallback placeholder since network thumbnail might fail on mocks
-                          Container(color: Colors.grey[900]), 
+                          Container(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[900] : Colors.grey[300]), 
                           Image.network(
                             YoutubePlayer.getThumbnail(videoId: video['id']!),
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (_,__,___) => Container(color: Colors.grey[900]),
+                            errorBuilder: (_,__,___) => Container(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[900] : Colors.grey[300]),
                           ),
                           Container(
                             color: Colors.black45,

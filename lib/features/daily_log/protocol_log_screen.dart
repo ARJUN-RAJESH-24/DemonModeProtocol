@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_pallete.dart';
 import '../nutrition/nutrition_screen.dart'; // Imports NutritionPage
 import 'daily_log_view_model.dart';
+
 import 'widgets/glass_action_card.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 
 class ProtocolLogScreen extends StatelessWidget {
   const ProtocolLogScreen({super.key});
@@ -65,25 +68,22 @@ class _HydrationView extends StatelessWidget {
                    const Icon(Icons.water_drop, size: 50, color: Colors.blueAccent),
                    const SizedBox(height: 10),
                    const Text("WATER INTAKE", style: TextStyle(letterSpacing: 2, color: Colors.grey)),
-                   Text("${(log.waterIntake / 1000).toStringAsFixed(1)}L", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
-                   const Text("Target: 5.0L", style: TextStyle(color: Colors.grey)),
-                   
-                   const SizedBox(height: 20),
+                   Text("${(log.waterIntake / 1000).toStringAsFixed(1)}L", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                   const SizedBox(height: 10),
                    Row(
-                     children: [
-                       Expanded(child: _ActionButton("250ml", Icons.add, () => vm.updateWater(250))),
-                       const SizedBox(width: 10),
-                       Expanded(child: _ActionButton("500ml", Icons.add, () => vm.updateWater(500))),
-                     ],
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _IntakeButton(icon: Icons.remove, onTap: () => vm.updateWater(-250)),
+                        const SizedBox(width: 20),
+                        _IntakeButton(icon: Icons.add, onTap: () => vm.updateWater(250)),
+                      ],
                    )
                  ],
                ),
              ),
-           ),
-           
+           ), 
            const SizedBox(height: 20),
-           
-           // Coffee Section
+           // Caffeine Section
            GlassActionCard(
              child: Padding(
                padding: const EdgeInsets.all(16),
@@ -92,10 +92,16 @@ class _HydrationView extends StatelessWidget {
                    const Icon(Icons.coffee, size: 50, color: Colors.brown),
                    const SizedBox(height: 10),
                    const Text("CAFFEINE", style: TextStyle(letterSpacing: 2, color: Colors.grey)),
-                   Text("${log.coffeeIntake} Cups", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
-                   
-                   const SizedBox(height: 20),
-                   _ActionButton("Add Cup", Icons.add, () => vm.updateCoffee(1)),
+                   Text("${log.coffeeIntake} CUPS", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                   const SizedBox(height: 10),
+                   Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _IntakeButton(icon: Icons.remove, onTap: () => vm.updateCoffee(-1)),
+                        const SizedBox(width: 20),
+                        _IntakeButton(icon: Icons.add, onTap: () => vm.updateCoffee(1)),
+                      ],
+                   )
                  ],
                ),
              ),
@@ -129,7 +135,7 @@ class _SupplementsView extends StatelessWidget {
             runSpacing: 8,
             children: log.supplements.map((s) => Chip(
               label: Text(s),
-              backgroundColor: AppPallete.surfaceColor,
+              backgroundColor: Theme.of(context).cardColor,
               deleteIcon: const Icon(Icons.close, size: 16),
               onDeleted: () => vm.removeSupplement(s),
             )).toList(),
@@ -144,7 +150,7 @@ class _SupplementsView extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: "Add Supplement (e.g. Creatine)",
                     filled: true,
-                    fillColor: AppPallete.surfaceColor,
+                    fillColor: Theme.of(context).cardColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                   ),
                 ),
@@ -219,12 +225,43 @@ class _MindViewState extends State<_MindView> {
              decoration: InputDecoration(
                hintText: "Record your daily conquests...",
                filled: true,
-               fillColor: AppPallete.surfaceColor,
+               fillColor: Theme.of(context).cardColor,
                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
              ),
-             onChanged: (val) => vm.updateJournal(val), // Auto-save on type might be too aggressive, but VM saves are async. Maybe debounce?
-             // Since we use provider, let's update on focus lost or separate button? 
-             // Simplest: Update on change for prototype feel.
+             onChanged: (val) => vm.updateJournal(val), 
+           ),
+           
+           const SizedBox(height: 25),
+           const Align(alignment: Alignment.centerLeft, child: Text("PROGRESS PHOTOS", style: TextStyle(fontWeight: FontWeight.bold))),
+           const SizedBox(height: 10),
+           SizedBox(
+             height: 120,
+             child: ListView(
+               scrollDirection: Axis.horizontal,
+               children: [
+                  GestureDetector(
+                    onTap: () => vm.addPhoto(),
+                    child: Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Theme.of(context).dividerColor)
+                      ),
+                      child: Icon(Icons.camera_alt, color: Theme.of(context).textTheme.bodyLarge?.color),
+                    ),
+                  ),
+                  if (vm.currentLog?.photoPaths != null)
+                    ...vm.currentLog!.photoPaths.map((path) => Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(File(path), width: 100, height: 120, fit: BoxFit.cover),
+                      ),
+                    ))
+               ],
+             ),
            ),
         ],
       ),
@@ -232,32 +269,29 @@ class _MindViewState extends State<_MindView> {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final String label;
+
+
+class _IntakeButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-
-  const _ActionButton(this.label, this.icon, this.onTap);
+  
+  const _IntakeButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppPallete.primaryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppPallete.primaryColor.withOpacity(0.5)),
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.black12,
+          shape: BoxShape.circle,
+          border: Border.all(color: Theme.of(context).dividerColor)
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 16, color: AppPallete.primaryColor),
-            const SizedBox(width: 5),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: AppPallete.primaryColor)),
-          ],
-        ),
+        child: Icon(icon, color: Theme.of(context).textTheme.bodyLarge?.color),
       ),
     );
   }

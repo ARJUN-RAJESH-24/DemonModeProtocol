@@ -50,8 +50,8 @@ class _MainScreenState extends State<MainScreen> {
             HapticFeedback.lightImpact();
             setState(() => _currentIndex = idx);
           },
-          backgroundColor: AppPallete.surfaceColor,
-          indicatorColor: AppPallete.primaryColor.withOpacity(0.5),
+          backgroundColor: Theme.of(context).navigationBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
+          indicatorColor: Theme.of(context).primaryColor.withOpacity(0.5),
           destinations: const [
              NavigationDestination(
                icon: Icon(Icons.dashboard_outlined), 

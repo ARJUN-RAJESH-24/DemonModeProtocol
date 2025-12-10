@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'core/theme/app_pallete.dart';
 import 'data/database/database_service.dart';
 import 'features/settings/settings_view_model.dart';
@@ -10,7 +11,7 @@ import 'features/workout/workout_view_model.dart';
 import 'features/daily_log/daily_log_view_model.dart';
 import 'features/dashboard/dashboard_view_model.dart';
 import 'features/body_metrics/body_metrics_view_model.dart';
-import 'features/onboarding/onboarding_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,7 +48,9 @@ class DemonModeApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Demon Mode',
-          theme: AppTheme.getTheme(settings.accentColor),
+          themeMode: settings.themeMode,
+          theme: AppTheme.getLightTheme(settings.accentColor),
+          darkTheme: AppTheme.getDarkTheme(settings.accentColor),
           home: const _AppLoader(), 
         );
       },
@@ -76,7 +79,7 @@ class _AppLoaderState extends State<_AppLoader> {
     
     if (mounted) {
        Navigator.of(context).pushReplacement(
-         MaterialPageRoute(builder: (_) => showOnboarding ? const OnboardingScreen() : const MainScreen())
+         MaterialPageRoute(builder: (_) => showOnboarding ? OnboardingScreen() : MainScreen())
        );
     }
   }
